@@ -31,10 +31,20 @@ export default $config({
       environment: {
         DB_HOST: database.host,
         DB_PORT: $interpolate`${database.port}`,
-        DB_USER: database.username,
-        DB_PASSWORD: database.password,
         DB_NAME: database.database,
       },
     });
+    return {
+      database: {
+        host: database.host,
+        port: database.port,
+      },
+      cluster: {
+        id: cluster.id,
+      },
+      vpc: {
+        id: vpc.id,
+      },
+    };
   },
 });
