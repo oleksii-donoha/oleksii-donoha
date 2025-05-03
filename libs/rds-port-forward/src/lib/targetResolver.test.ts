@@ -1,7 +1,8 @@
 import { ECSClient } from '@aws-sdk/client-ecs';
 import { confirm, select } from '@inquirer/prompts';
-import { paginate } from './client';
-import { TargetResolver } from './targetResolver';
+import { paginate } from './client/index.js';
+import { TargetResolver } from './targetResolver.js';
+import { Logger } from 'winston';
 
 vi.mock('@inquirer/prompts', () => ({
   select: vi.fn(),
@@ -14,13 +15,21 @@ vi.mock('./client', () => ({
 
 describe('TargetResolver', () => {
   let ecsClientMock: ECSClient;
+  let winstonMock: Logger;
   let targetResolver: TargetResolver;
 
   beforeEach(() => {
     ecsClientMock = {
       send: vi.fn(),
     } as unknown as ECSClient;
-    targetResolver = new TargetResolver(ecsClientMock);
+    winstonMock = {
+      debug: vi.fn(),
+    } as unknown as Logger;
+    targetResolver = new TargetResolver(ecsClientMock, winstonMock);
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
   });
 
   describe('target', () => {
@@ -65,6 +74,40 @@ describe('TargetResolver', () => {
       await targetResolver.resolveCluster();
 
       expect(targetResolver['clusterName']).toBe('test-cluster');
+    });
+
+    it('should throw an error if no ECS clusters are found', async () => {
+      vi.mocked(paginate).mockResolvedValueOnce([]);
+
+      await expect(targetResolver.resolveCluster()).rejects.toThrowError(
+        'No ECS clusters found'
+      );
+    });
+
+    it('should set the cluster name if only one cluster is found', async () => {
+      vi.mocked(paginate).mockResolvedValueOnce([
+        'arn:aws:ecs:region:123456789012:cluster/test-cluster',
+      ]);
+
+      await targetResolver.resolveCluster();
+
+      expect(targetResolver['clusterName']).toBe('test-cluster');
+    });
+
+    it('should prompt the user to select a cluster if multiple clusters are found', async () => {
+      vi.mocked(paginate).mockResolvedValueOnce([
+        'arn:aws:ecs:region:123456789012:cluster/cluster-1',
+        'arn:aws:ecs:region:123456789012:cluster/cluster-2',
+      ]);
+      vi.mocked(select).mockResolvedValueOnce('cluster-2');
+
+      await targetResolver.resolveCluster();
+
+      expect(select).toBeCalledWith({
+        message: '🌍 Select the target ECS cluster',
+        choices: [{ value: 'cluster-1' }, { value: 'cluster-2' }],
+      });
+      expect(targetResolver['clusterName']).toBe('cluster-2');
     });
   });
 
@@ -243,12 +286,12 @@ describe('TargetResolver', () => {
       targetResolver['clusterName'] = 'test-cluster';
       targetResolver['taskId'] = 'test-task';
       vi.mocked(paginate).mockResolvedValueOnce([]);
-  
+
       await expect(targetResolver.resolveContainer()).rejects.toThrowError(
         "Task with ID 'test-task' was not found. Did it get evicted in the meantime?"
       );
     });
-  
+
     it('should throw an error if no containers are found in the task', async () => {
       targetResolver['clusterName'] = 'test-cluster';
       targetResolver['taskId'] = 'test-task';
@@ -257,12 +300,12 @@ describe('TargetResolver', () => {
           containers: [],
         },
       ]);
-  
+
       await expect(targetResolver.resolveContainer()).rejects.toThrowError(
         'No containers found inside the task test-task'
       );
     });
-  
+
     it('should resolve and set the container runtime ID when only one container is found', async () => {
       targetResolver['clusterName'] = 'test-cluster';
       targetResolver['taskId'] = 'test-task';
@@ -277,12 +320,12 @@ describe('TargetResolver', () => {
           ],
         },
       ]);
-  
+
       await targetResolver.resolveContainer();
-  
+
       expect(targetResolver['containerRuntimeId']).toBe('test-runtime-id');
     });
-  
+
     it('should resolve and set the container runtime ID when multiple containers are found and one is selected', async () => {
       targetResolver['clusterName'] = 'test-cluster';
       targetResolver['taskId'] = 'test-task';
@@ -303,11 +346,10 @@ describe('TargetResolver', () => {
         },
       ]);
       vi.mocked(select).mockResolvedValueOnce('runtime-id-2');
-  
+
       await targetResolver.resolveContainer();
-  
+
       expect(targetResolver['containerRuntimeId']).toBe('runtime-id-2');
     });
   });
-
 });

@@ -1,9 +1,13 @@
 import { ECSClient, Task } from '@aws-sdk/client-ecs';
 import { describe, expect, it, Mock, vi } from 'vitest';
-import { paginate } from './index';
-import { paginateClientCommand, paginateDescribeTasksRequest } from './util';
+import { paginate } from './index.js';
+import {
+  paginateClientCommand,
+  paginateDescribeTasksRequest,
+} from './util.js';
 
-vi.mock('./util', () => ({
+vi.mock('./util.js', async () => ({
+  ...(await vi.importActual('./util.js')),
   paginateDescribeTasksRequest: vi.fn(),
   paginateClientCommand: vi.fn(),
 }));
@@ -12,9 +16,10 @@ describe('paginate', () => {
   const mockClient = {} as ECSClient;
 
   it('should call paginateDescribeTasksRequest when input is an array of strings', async () => {
-    const input = ['task1', 'task2'];
+    const input = { taskArns: ['task1', 'task2'], clusterName: 'cluster' };
     const mockTasks: Task[] = [{ taskArn: 'task1' }, { taskArn: 'task2' }];
-    (paginateDescribeTasksRequest as Mock).mockResolvedValue(mockTasks);
+    vi.mocked(paginateDescribeTasksRequest).mockResolvedValue(mockTasks);
+    // vi.mocked(isDescribeTasks).mockResolvedValueOnce(true)
 
     const result = await paginate(mockClient, input);
 

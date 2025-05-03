@@ -1,19 +1,25 @@
 import { ECSClient, Task } from '@aws-sdk/client-ecs';
 import {
+  isDescribeTasks,
+  paginateClientCommand,
   PaginatedCommandInput,
   paginateDescribeTasksRequest,
-  paginateClientCommand,
-} from './util';
+  RawDescribeTasksInput,
+} from './util.js';
 
-export const paginate = async <T extends string[] | PaginatedCommandInput>(
+export const paginate = async <
+  T extends RawDescribeTasksInput | PaginatedCommandInput
+>(
   client: ECSClient,
   input: T
-): Promise<T extends string[] ? Task[] : string[]> => {
-  return Array.isArray(input)
-    ? ((await paginateDescribeTasksRequest(client, input)) as T extends string[]
-        ? Task[]
-        : string[])
-    : ((await paginateClientCommand(client, input)) as T extends string[]
-        ? Task[]
-        : string[]);
+): Promise<T extends RawDescribeTasksInput ? Task[] : string[]> => {
+  return isDescribeTasks(input)
+    ? ((await paginateDescribeTasksRequest(
+        client,
+        input
+      )) as T extends RawDescribeTasksInput ? Task[] : string[])
+    : ((await paginateClientCommand(
+        client,
+        input
+      )) as T extends RawDescribeTasksInput ? Task[] : string[]);
 };

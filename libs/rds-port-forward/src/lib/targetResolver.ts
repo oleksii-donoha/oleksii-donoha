@@ -1,21 +1,25 @@
 import { DesiredStatus, ECSClient } from '@aws-sdk/client-ecs';
 import { confirm, select } from '@inquirer/prompts';
 import Fuse from 'fuse.js';
-import { paginate } from './client';
+import { paginate } from './client/index.js';
+import { type RawDescribeTasksInput } from './client/util.js';
+import { type Logger } from 'winston';
 
 export class TargetResolver {
   private readonly ecsClient: ECSClient;
+  private readonly logger: Logger;
   private clusterName: string | undefined;
   private taskId: string | undefined;
   private containerRuntimeId: string | undefined;
   private serviceName: string | undefined;
 
-  constructor(ecsClient: ECSClient) {
+  constructor(ecsClient: ECSClient, logger: Logger) {
     this.ecsClient = ecsClient;
     this.clusterName = undefined;
     this.taskId = undefined;
     this.containerRuntimeId = undefined;
     this.serviceName = undefined;
+    this.logger = logger;
   }
 
   private failIfClusterNameIsNotSet() {
@@ -41,24 +45,33 @@ export class TargetResolver {
     return `ecs:${this.clusterName}_${this.taskId}_${this.containerRuntimeId}`;
   }
 
-  async resolveCluster(): Promise<ThisType<TargetResolver>> {
+  async resolveCluster(): Promise<TargetResolver> {
     const allClusterArns = await paginate(this.ecsClient, {});
+    if (allClusterArns.length === 0) {
+      throw new Error('No ECS clusters found');
+    }
+    const clusterNames = allClusterArns.map((arn) => arn.split('/')[1]);
+    if (clusterNames.length === 1) {
+      this.logger.debug(
+        `There is only one cluster ${clusterNames[0]}, using it`
+      );
+      this.clusterName = clusterNames[0];
+      return this;
+    }
+    this.logger.debug('Found clusters', clusterNames);
     this.clusterName = await select({
       message: '🌍 Select the target ECS cluster',
-      choices: allClusterArns.map((arn) => {
-        return {
-          value: arn.split('/')[1],
-        };
-      }),
+      choices: clusterNames.map((value) => ({ value })),
     });
     return this;
   }
 
-  async resolveService(
-    serviceNameLike?: string
-  ): Promise<ThisType<TargetResolver>> {
+  async resolveService(serviceNameLike?: string): Promise<TargetResolver> {
     this.failIfClusterNameIsNotSet();
     if (!serviceNameLike) {
+      this.logger.debug(
+        'Service name not provided, skipping service resolution'
+      );
       return this;
     }
 
@@ -72,6 +85,7 @@ export class TargetResolver {
     }
     const exactMatch = serviceNames.find((name) => name === serviceNameLike);
     if (exactMatch) {
+      this.logger.debug('Service name matched exactly');
       this.serviceName = exactMatch;
       return this;
     }
@@ -104,10 +118,11 @@ export class TargetResolver {
         return { value: s };
       }),
     });
+    this.logger.debug('Resolved service name', this.serviceName);
     return this;
   }
 
-  async resolveTask(): Promise<ThisType<TargetResolver>> {
+  async resolveTask(): Promise<TargetResolver> {
     this.failIfClusterNameIsNotSet();
     const allTaskArns = await paginate(this.ecsClient, {
       cluster: this.clusterName,
@@ -125,12 +140,17 @@ export class TargetResolver {
       allTaskArns.length === 1 ||
       (this.serviceName && allTaskArns.length > 0)
     ) {
-      // If service is set, all tasks use the same definition
+      this.logger.debug(
+        'Service name is set, selecting the first task as target'
+      );
       this.taskId = allTaskArns[0].split('/').pop();
       return this;
     }
 
-    const detailedTasks = await paginate(this.ecsClient, allTaskArns);
+    const detailedTasks = await paginate(this.ecsClient, {
+      taskArns: allTaskArns,
+      clusterName: this.clusterName,
+    } as RawDescribeTasksInput);
     this.taskId = await select({
       message: '🤔 Select a matching task',
       choices: detailedTasks.map((task) => {
@@ -147,14 +167,18 @@ export class TargetResolver {
         };
       }),
     });
+    this.logger.debug('Resolved the task to', this.taskId);
     return this;
   }
 
-  async resolveContainer(): Promise<ThisType<TargetResolver>> {
+  async resolveContainer(): Promise<TargetResolver> {
     this.failIfClusterNameIsNotSet();
     this.failIfTaskIdIsNotSet();
 
-    const taskDetails = await paginate(this.ecsClient, [this.taskId as string]);
+    const taskDetails = await paginate(this.ecsClient, {
+      taskArns: [this.taskId as string],
+      clusterName: this.clusterName,
+    } as RawDescribeTasksInput);
     if (taskDetails.length === 0) {
       throw new Error(
         `Task with ID '${this.taskId}' was not found. Did it get evicted in the meantime?`
@@ -165,6 +189,7 @@ export class TargetResolver {
       throw new Error(`No containers found inside the task ${this.taskId}`);
     }
     if (task.containers.length === 1) {
+      this.logger.debug('Task only has one container, using it as target');
       this.containerRuntimeId = task.containers[0].runtimeId;
       return this;
     }
@@ -177,6 +202,7 @@ export class TargetResolver {
         };
       }),
     });
+    this.logger.debug('Resolved runtime ID to', this.containerRuntimeId);
     return this;
   }
 }

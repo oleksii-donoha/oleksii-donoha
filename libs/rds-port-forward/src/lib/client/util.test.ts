@@ -10,7 +10,7 @@ import {
   paginateClientCommand,
   PaginatedCommandInput,
   paginateDescribeTasksRequest,
-} from './util';
+} from './util.js';
 
 vi.mock('@aws-sdk/client-ecs', () => ({
   ECSClient: vi.fn(),
@@ -106,14 +106,20 @@ describe('clientUtil', () => {
 
       const result = await paginateDescribeTasksRequest(
         mockClient,
-        ['task1', 'task2'],
+        { taskArns: ['task1', 'task2'], clusterName: 'cluster' },
         1
       );
 
       expect(result).toEqual([{ taskArn: 'task1' }, { taskArn: 'task2' }]);
       expect(mockSend).toHaveBeenCalledTimes(2);
-      expect(DescribeTasksCommand).toHaveBeenCalledWith({ tasks: ['task1'] });
-      expect(DescribeTasksCommand).toHaveBeenCalledWith({ tasks: ['task2'] });
+      expect(DescribeTasksCommand).toHaveBeenCalledWith({
+        tasks: ['task1'],
+        cluster: 'cluster',
+      });
+      expect(DescribeTasksCommand).toHaveBeenCalledWith({
+        tasks: ['task2'],
+        cluster: 'cluster',
+      });
     });
 
     it('should throw an error if there are failures', async () => {
@@ -122,7 +128,10 @@ describe('clientUtil', () => {
       });
 
       await expect(
-        paginateDescribeTasksRequest(mockClient, ['task1'])
+        paginateDescribeTasksRequest(mockClient, {
+          taskArns: ['task1'],
+          clusterName: 'cluster',
+        })
       ).rejects.toThrow('Failed to describe some tasks:');
     });
 
@@ -130,7 +139,10 @@ describe('clientUtil', () => {
       mockSend.mockResolvedValueOnce({ tasks: [], failures: [] });
 
       await expect(
-        paginateDescribeTasksRequest(mockClient, ['task1'])
+        paginateDescribeTasksRequest(mockClient, {
+          taskArns: ['task1'],
+          clusterName: 'cluster',
+        })
       ).rejects.toThrow('No tasks were returned by AWS API');
     });
   });

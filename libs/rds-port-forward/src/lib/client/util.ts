@@ -1,6 +1,5 @@
 import {
   DescribeTasksCommand,
-  DescribeTasksCommandInput,
   ECSClient,
   ListClustersCommand,
   ListClustersCommandInput,
@@ -8,7 +7,7 @@ import {
   ListServicesCommandInput,
   ListTasksCommand,
   ListTasksCommandInput,
-  Task,
+  Task
 } from '@aws-sdk/client-ecs';
 
 const DESCRIBE_TASKS_MAX_ARNS = 100;
@@ -18,12 +17,17 @@ export type PaginatedCommandInput =
   | ListTasksCommandInput
   | ListServicesCommandInput;
 
+export type RawDescribeTasksInput = {
+  taskArns: string[];
+  clusterName: string;
+};
+
 const isListTasks = (
   input: PaginatedCommandInput
 ): input is ListTasksCommandInput => 'desiredStatus' in input;
-const isDescribeTasks = (
-  input: PaginatedCommandInput
-): input is DescribeTasksCommandInput => 'tasks' in input;
+export const isDescribeTasks = (
+  input: PaginatedCommandInput | RawDescribeTasksInput
+): input is RawDescribeTasksInput => 'taskArns' in input;
 const isListServices = (
   input: PaginatedCommandInput
 ): input is ListServicesCommandInput =>
@@ -78,12 +82,16 @@ function* getBatch(arns: string[], size: number) {
 
 export const paginateDescribeTasksRequest = async (
   client: ECSClient,
-  taskArns: string[],
+  rawInput: RawDescribeTasksInput,
   batchSize: number = DESCRIBE_TASKS_MAX_ARNS
 ) => {
+  const { taskArns, clusterName } = rawInput;
   const tasks: Task[] = [];
   for (const batch of getBatch(taskArns, batchSize)) {
-    const command = new DescribeTasksCommand({ tasks: batch });
+    const command = new DescribeTasksCommand({
+      tasks: batch,
+      cluster: clusterName,
+    });
     const response = await client.send(command);
     if (response.failures && response.failures.length > 0) {
       throw new Error(
