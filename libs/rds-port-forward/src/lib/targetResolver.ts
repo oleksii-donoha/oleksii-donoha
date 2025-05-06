@@ -4,7 +4,7 @@ import Fuse from 'fuse.js';
 import { paginate } from './client/index.js';
 import { type RawDescribeTasksInput } from './client/util.js';
 import { type Logger } from 'winston';
-import { CliManager, CliOptionType } from './cli.js';
+import { Mediator } from './mediator.js';
 
 export class TargetResolver {
   private readonly ecsClient: ECSClient;
@@ -13,16 +13,16 @@ export class TargetResolver {
   private taskId: string | undefined;
   private containerRuntimeId: string | undefined;
   private serviceName: string | undefined;
-  private cliManager: CliManager;
+  private mediator: Mediator;
 
-  constructor(ecsClient: ECSClient, logger: Logger, cliManager: CliManager) {
+  constructor(ecsClient: ECSClient, logger: Logger, mediator: Mediator) {
     this.ecsClient = ecsClient;
     this.clusterName = undefined;
     this.taskId = undefined;
     this.containerRuntimeId = undefined;
     this.serviceName = undefined;
     this.logger = logger;
-    this.cliManager = cliManager;
+    this.mediator = mediator;
   }
 
   private failIfClusterNameIsNotSet() {
@@ -39,7 +39,7 @@ export class TargetResolver {
     }
   }
 
-  get target(): string {
+  get target() {
     this.failIfClusterNameIsNotSet();
     this.failIfTaskIdIsNotSet();
     if (!this.containerRuntimeId) {
@@ -59,11 +59,11 @@ export class TargetResolver {
         `There is only one cluster ${clusterNames[0]}, using it`
       );
       this.clusterName = clusterNames[0];
-      this.cliManager.markCliOptionAs(
-        CliOptionType.Skippable,
-        'cluster',
-        this.clusterName
-      );
+      this.mediator.processedArgs.cluster = {
+        skippable: true,
+        value: this.clusterName,
+      };
+      this.mediator.target.clusterName = this.clusterName;
       return this;
     }
     this.logger.debug('Found clusters', clusterNames);
@@ -71,11 +71,11 @@ export class TargetResolver {
       message: '🌍 Select the target ECS cluster',
       choices: clusterNames.map((value) => ({ value })),
     });
-    this.cliManager.markCliOptionAs(
-      CliOptionType.Required,
-      'cluster',
-      this.clusterName
-    );
+    this.mediator.processedArgs.cluster = {
+      skippable: false,
+      value: this.clusterName,
+    };
+    this.mediator.target.clusterName = this.clusterName;
     return this;
   }
 
@@ -85,11 +85,10 @@ export class TargetResolver {
       this.logger.debug(
         'Service name not provided, skipping service resolution'
       );
-      this.cliManager.markCliOptionAs(
-        CliOptionType.Skippable,
-        'service',
-        undefined
-      );
+      this.mediator.processedArgs.service = {
+        skippable: true,
+        value: undefined,
+      };
       return this;
     }
 
@@ -105,13 +104,10 @@ export class TargetResolver {
     if (exactMatch) {
       this.logger.debug('Service name matched exactly');
       this.serviceName = exactMatch;
-      this.cliManager.markCliOptionAs(
-        serviceNames.length === 1
-          ? CliOptionType.Skippable
-          : CliOptionType.Required,
-        'service',
-        this.serviceName
-      );
+      this.mediator.processedArgs.service = {
+        skippable: serviceNames.length === 1,
+        value: this.serviceName,
+      };
       return this;
     }
 
@@ -134,11 +130,10 @@ export class TargetResolver {
         throw new Error('Cannot use the only potential matching service');
       }
       this.serviceName = potentialServices[0];
-      this.cliManager.markCliOptionAs(
-        CliOptionType.Required,
-        'service',
-        this.serviceName
-      );
+      this.mediator.processedArgs.service = {
+        skippable: false,
+        value: this.serviceName,
+      };
       return this;
     }
     this.serviceName = await select({
@@ -149,11 +144,10 @@ export class TargetResolver {
       }),
     });
     this.logger.debug('Resolved service name', this.serviceName);
-    this.cliManager.markCliOptionAs(
-      CliOptionType.Required,
-      'service',
-      this.serviceName
-    );
+    this.mediator.processedArgs.service = {
+      skippable: false,
+      value: this.serviceName,
+    };
     return this;
   }
 
@@ -171,26 +165,34 @@ export class TargetResolver {
       );
     }
 
+    const detailedTasks = await paginate(this.ecsClient, {
+      taskArns: allTaskArns,
+      clusterName: this.clusterName,
+    } as RawDescribeTasksInput);
+
     if (
       allTaskArns.length === 1 ||
       (this.serviceName && allTaskArns.length > 0)
     ) {
       this.logger.debug(
-        'Service name is set, selecting the first task as target'
+        this.serviceName
+          ? 'Service name is set, selecting the first task as target'
+          : 'Only one task found, using it as target'
       );
       this.taskId = allTaskArns[0].split('/').pop();
+      this.mediator.target.taskId = this.taskId;
+      this.mediator.target.taskDefinition = detailedTasks[0].taskDefinitionArn;
       return this;
     }
 
-    const detailedTasks = await paginate(this.ecsClient, {
-      taskArns: allTaskArns,
-      clusterName: this.clusterName,
-    } as RawDescribeTasksInput);
-    this.taskId = await select({
+    const { taskId, taskDefinition } = await select({
       message: '🤔 Select a matching task',
       choices: detailedTasks.map((task) => {
         return {
-          value: task.taskArn?.split('/').pop(),
+          value: {
+            taskId: task.taskArn?.split('/').pop(),
+            taskDefinition: task.taskDefinitionArn,
+          },
           description: [
             `Name (tag): ${
               task.tags?.find((tag) => tag.key === 'Name')?.value
@@ -202,7 +204,10 @@ export class TargetResolver {
         };
       }),
     });
+    this.taskId = taskId;
     this.logger.debug('Resolved the task to', this.taskId);
+    this.mediator.target.taskId = this.taskId;
+    this.mediator.target.taskDefinition = taskDefinition;
     return this;
   }
 
@@ -224,13 +229,9 @@ export class TargetResolver {
       throw new Error(`No containers found inside the task ${this.taskId}`);
     }
     if (task.containers.length === 1) {
-      this.logger.debug('Task only has one container, using it as target');
+      this.logger.debug('Task has a single container, using it as target');
       this.containerRuntimeId = task.containers[0].runtimeId;
-      this.cliManager.markCliOptionAs(
-        CliOptionType.Skippable,
-        'container',
-        task.containers[0].name
-      );
+      this.mediator.target.containerName = task.containers[0].name;
       return this;
     }
     const { runtimeId, name } = await select({
@@ -244,7 +245,7 @@ export class TargetResolver {
     });
     this.containerRuntimeId = runtimeId;
     this.logger.debug('Resolved runtime ID to', this.containerRuntimeId);
-    this.cliManager.markCliOptionAs(CliOptionType.Required, 'container', name);
+    this.mediator.target.containerName = name;
     return this;
   }
 }

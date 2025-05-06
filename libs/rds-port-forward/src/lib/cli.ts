@@ -1,8 +1,9 @@
 import { Logger } from 'winston';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { Mediator } from './mediator.js';
 
-type Arg = {
+export type Arg = {
   value: string | undefined;
   skippable?: boolean;
 };
@@ -15,7 +16,7 @@ const argKeys = [
   'db-host-from-container-env',
 ] as const;
 
-type ArgKey = (typeof argKeys)[number];
+export type ArgKey = (typeof argKeys)[number];
 
 export enum CliOptionType {
   Skippable,
@@ -23,13 +24,12 @@ export enum CliOptionType {
 }
 
 export class CliManager {
-  private incoming: Record<ArgKey, string | undefined>;
-  #equivalent: Partial<Record<ArgKey, Arg>> | undefined;
   private logger: Logger;
+  private mediator: Mediator;
 
-  constructor(logger: Logger, argv: typeof process.argv) {
+  constructor(logger: Logger, mediator: Mediator, argv: typeof process.argv) {
     this.logger = logger;
-    this.#equivalent = undefined;
+    this.mediator = mediator;
     const parsedArgv = yargs()
       .scriptName('rds-port-forward')
       .options({
@@ -59,34 +59,23 @@ export class CliManager {
       .conflicts('db-host', 'db-host-from-container-env')
       .parseSync(hideBin(argv));
 
-    this.incoming = argKeys.reduce((acc, argKey) => {
+    this.mediator.rawArgs = argKeys.reduce((acc, argKey) => {
       acc[argKey] = parsedArgv[argKey];
       return acc;
     }, {} as Record<ArgKey, string | undefined>);
-    this.logger.debug('Parsed incoming CLI arguments to', this.incoming);
+    this.logger.debug(
+      'Parsed incoming CLI arguments to',
+      this.mediator.rawArgs
+    );
   }
 
   get equivalent() {
-    if (!this.#equivalent) {
-      throw new Error(
-        'The equivalent CLI args are not set. Did you forget to set them while processing the target?'
-      );
+    if (
+      !this.mediator.processedArgs ||
+      Object.keys(this.mediator).length === 0
+    ) {
+      throw new Error('There is no collected argument data from resolvers');
     }
-    return this.#equivalent;
-  }
-
-  public markCliOptionAs(
-    optionType: CliOptionType,
-    argKey: ArgKey,
-    value: string | undefined
-  ) {
-    const skippable = optionType === CliOptionType.Skippable;
-    if (!this.#equivalent) {
-      this.#equivalent = {
-        [argKey]: { value, skippable },
-      };
-    } else {
-      this.#equivalent[argKey] = { value, skippable };
-    }
+    return this.mediator.processedArgs;
   }
 }
