@@ -3,13 +3,14 @@ import { confirm, select } from '@inquirer/prompts';
 import { paginate } from './client/index.js';
 import { TargetResolver } from './targetResolver.js';
 import { Logger } from 'winston';
+import { CliManager } from './cli.js';
 
 vi.mock('@inquirer/prompts', () => ({
   select: vi.fn(),
   confirm: vi.fn(),
 }));
 
-vi.mock('./client', () => ({
+vi.mock('./client/index.js', () => ({
   paginate: vi.fn(),
 }));
 
@@ -17,6 +18,7 @@ describe('TargetResolver', () => {
   let ecsClientMock: ECSClient;
   let winstonMock: Logger;
   let targetResolver: TargetResolver;
+  let cliManager: CliManager;
 
   beforeEach(() => {
     ecsClientMock = {
@@ -25,7 +27,10 @@ describe('TargetResolver', () => {
     winstonMock = {
       debug: vi.fn(),
     } as unknown as Logger;
-    targetResolver = new TargetResolver(ecsClientMock, winstonMock);
+    cliManager = {
+      markCliOptionAs: vi.fn(),
+    } as unknown as CliManager;
+    targetResolver = new TargetResolver(ecsClientMock, winstonMock, cliManager);
   });
 
   afterEach(() => {
@@ -345,7 +350,10 @@ describe('TargetResolver', () => {
           ],
         },
       ]);
-      vi.mocked(select).mockResolvedValueOnce('runtime-id-2');
+      vi.mocked(select).mockResolvedValueOnce({
+        runtimeId: 'runtime-id-2',
+        name: 'web',
+      });
 
       await targetResolver.resolveContainer();
 

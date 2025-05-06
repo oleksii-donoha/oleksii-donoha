@@ -42,7 +42,8 @@
     "@aws-sdk/client-ecs": "^3.799.0",
     "@inquirer/prompts": "^7.5.0",
     "fuse.js": "^7.1.0",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "yargs": "^17.7.2"
   },
   "nx": {
     "includedScripts": [],
