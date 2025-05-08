@@ -132,7 +132,7 @@ export class TargetResolver {
       this.serviceName = potentialServices[0];
       this.mediator.processedArgs.service = {
         skippable: false,
-        value: this.serviceName,
+        value: this.serviceName as string,
       };
       return this;
     }
@@ -146,7 +146,7 @@ export class TargetResolver {
     this.logger.debug('Resolved service name', this.serviceName);
     this.mediator.processedArgs.service = {
       skippable: false,
-      value: this.serviceName,
+      value: this.serviceName as string,
     };
     return this;
   }
@@ -188,16 +188,15 @@ export class TargetResolver {
     const { taskId, taskDefinition } = await select({
       message: '🤔 Select a matching task',
       choices: detailedTasks.map((task) => {
+        const def = task.taskDefinitionArn?.split('/').pop();
         return {
           value: {
             taskId: task.taskArn?.split('/').pop(),
             taskDefinition: task.taskDefinitionArn,
           },
+          name: def,
           description: [
-            `Name (tag): ${
-              task.tags?.find((tag) => tag.key === 'Name')?.value
-            }`,
-            `Task definition: ${task.taskDefinitionArn?.split('/').pop()}`,
+            `Tags.Name: ${task.tags?.find((tag) => tag.key === 'Name')?.value}`,
             'Containers:',
             ...(task.containers?.map((c) => `- ${c.name}; ${c.image}`) || []),
           ].join('\n'),
@@ -232,6 +231,10 @@ export class TargetResolver {
       this.logger.debug('Task has a single container, using it as target');
       this.containerRuntimeId = task.containers[0].runtimeId;
       this.mediator.target.containerName = task.containers[0].name;
+      this.mediator.processedArgs.container = {
+        value: task.containers[0].name,
+        skippable: true,
+      };
       return this;
     }
     const { runtimeId, name } = await select({
@@ -246,6 +249,10 @@ export class TargetResolver {
     this.containerRuntimeId = runtimeId;
     this.logger.debug('Resolved runtime ID to', this.containerRuntimeId);
     this.mediator.target.containerName = name;
+    this.mediator.processedArgs.container = {
+      value: name as string,
+      skippable: false,
+    };
     return this;
   }
 }

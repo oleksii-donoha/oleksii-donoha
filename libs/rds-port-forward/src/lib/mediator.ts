@@ -14,6 +14,7 @@ export type Mediator = {
     port: string | undefined;
     localPort: string | undefined;
   };
+  verbose: boolean;
 };
 
 export const mediator: Mediator = {
@@ -30,4 +31,5 @@ export const mediator: Mediator = {
     port: undefined,
     localPort: undefined,
   },
+  verbose: false,
 };

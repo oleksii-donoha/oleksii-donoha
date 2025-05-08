@@ -116,7 +116,10 @@ export class ForwardingParamsResolver {
         );
       }
       this.dbHost = containerEnv[varToLookup];
-      this.mediator.forwardingParams.dbHost = this.dbHost;
+      this.mediator.processedArgs['db-host'] = {
+        value: this.dbHost,
+        skippable: false,
+      };
       return this;
     }
     const proceedWithEnv = await confirm({
@@ -138,9 +141,13 @@ export class ForwardingParamsResolver {
           choices: sortedEnv.map(({ item }) => ({
             value: containerEnv[item],
             description: `${item}: ${containerEnv[item]}`,
+            name: item,
           })),
         });
-        this.mediator.forwardingParams.dbHost = this.dbHost;
+        this.mediator.processedArgs['db-host'] = {
+          value: this.dbHost,
+          skippable: false,
+        };
         this.logger.debug('Resolved DB host to', this.dbHost);
         return this;
       }
@@ -149,7 +156,10 @@ export class ForwardingParamsResolver {
       message: `✍️ Type in or paste the DB host address`,
       required: true,
     });
-    this.mediator.forwardingParams.dbHost = this.dbHost;
+    this.mediator.processedArgs['db-host'] = {
+      value: this.dbHost,
+      skippable: false,
+    };
     return this;
   }
 
@@ -157,7 +167,7 @@ export class ForwardingParamsResolver {
     if (this.mediator.rawArgs.port) {
       this.logger.debug('Using the DB port specified in the CLI parameters');
       this.port = this.mediator.rawArgs.port;
-      this.mediator.forwardingParams.port = this.port;
+      this.mediator.processedArgs.port = { value: this.port, skippable: false };
       return this;
     }
     const answer = await select({
@@ -165,36 +175,36 @@ export class ForwardingParamsResolver {
       choices: [
         {
           value: '3306',
-          description: 'MySQL (3306)',
+          name: 'MySQL (3306)',
         },
         {
           value: '5432',
-          description: 'PostgreSQL (5432)',
+          name: 'PostgreSQL (5432)',
         },
         {
           value: '27017',
-          description: 'MongoDB (27017)',
+          name: 'MongoDB (27017)',
         },
         {
           value: '5439',
-          description: 'Redshift (5439)',
+          name: 'Redshift (5439)',
         },
         new Separator(),
         {
           value: 'custom',
-          description: 'Other (type in)',
+          name: 'Other (type in)',
         },
       ],
     });
     if (answer !== 'custom') {
       this.port = answer;
-      this.mediator.forwardingParams.port = this.port;
+      this.mediator.processedArgs.port = { value: this.port, skippable: false };
       return this;
     }
     this.port = `${await number({
       message: '✍️ Type in or paste the DB port',
     })}`;
-    this.mediator.forwardingParams.port = this.port;
+    this.mediator.processedArgs.port = { value: this.port, skippable: false };
     return this;
   }
 
@@ -202,7 +212,10 @@ export class ForwardingParamsResolver {
     if (this.mediator.rawArgs['local-port']) {
       this.logger.debug('Using the local port specified in the CLI parameters');
       this.localPort = this.mediator.rawArgs['local-port'];
-      this.mediator.forwardingParams.localPort = this.localPort;
+      this.mediator.processedArgs['local-port'] = {
+        value: this.localPort,
+        skippable: false,
+      };
       return this;
     }
     if (!this.port) {
@@ -216,13 +229,19 @@ export class ForwardingParamsResolver {
       })
     ) {
       this.localPort = this.port;
-      this.mediator.forwardingParams.localPort = this.localPort;
+      this.mediator.processedArgs['local-port'] = {
+        value: this.localPort,
+        skippable: false,
+      };
       return this;
     }
     this.localPort = `${await number({
       message: '✍️ Type in or paste the local port',
     })}`;
-    this.mediator.forwardingParams.localPort = this.localPort;
+    this.mediator.processedArgs['local-port'] = {
+      value: this.localPort,
+      skippable: false,
+    };
     return this;
   }
 }

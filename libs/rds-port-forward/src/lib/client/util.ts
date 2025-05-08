@@ -7,7 +7,7 @@ import {
   ListServicesCommandInput,
   ListTasksCommand,
   ListTasksCommandInput,
-  Task
+  Task,
 } from '@aws-sdk/client-ecs';
 
 const DESCRIBE_TASKS_MAX_ARNS = 100;
@@ -75,8 +75,9 @@ export const paginateClientCommand = async (
 };
 
 function* getBatch(arns: string[], size: number) {
-  while (arns.length) {
-    yield arns.splice(0, size);
+  const arnsCopy = Array.from(arns);
+  while (arnsCopy.length) {
+    yield arnsCopy.splice(0, size);
   }
 }
 

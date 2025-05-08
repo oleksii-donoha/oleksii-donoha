@@ -131,7 +131,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveDbHost();
 
       expect(resolver['dbHost']).toBe('localhost');
-      expect(mediator.forwardingParams.dbHost).toBe('localhost');
+      expect(mediator.processedArgs['db-host']?.value).toBe('localhost');
     });
 
     it('should throw an error if ENV variable is not found', async () => {
@@ -174,7 +174,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveDbHost();
 
       expect(resolver['dbHost']).toBe('localhost');
-      expect(mediator.forwardingParams.dbHost).toBe('localhost');
+      expect(mediator.processedArgs['db-host']?.value).toBe('localhost');
     });
 
     it('should prompt user to select a DB host from container ENV variables', async () => {
@@ -212,11 +212,19 @@ describe('ForwardingParamsResolver', () => {
       expect(select).toHaveBeenCalledWith({
         message: '🌐 Select ENV variable to use as DB host',
         choices: [
-          { value: 'localhost', description: 'DB_HOST: localhost' },
-          { value: 'value', description: 'ANOTHER_ENV: value' },
+          {
+            value: 'localhost',
+            description: 'DB_HOST: localhost',
+            name: 'DB_HOST',
+          },
+          {
+            value: 'value',
+            description: 'ANOTHER_ENV: value',
+            name: 'ANOTHER_ENV',
+          },
         ],
       });
-      expect(mediator.forwardingParams.dbHost).toBe('localhost');
+      expect(mediator.processedArgs['db-host']?.value).toBe('localhost');
     });
 
     it('should log a message if container ENV is empty', async () => {
@@ -334,7 +342,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveDbHost();
 
       expect(resolver['dbHost']).toBe('not.localhost');
-      expect(mediator.forwardingParams.dbHost).toBe('not.localhost');
+      expect(mediator.processedArgs['db-host']?.value).toBe('not.localhost');
     });
   });
 
@@ -345,7 +353,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveRemotePort();
 
       expect(resolver['port']).toBe('5432');
-      expect(mediator.forwardingParams.port).toBe('5432');
+      expect(mediator.processedArgs.port?.value).toBe('5432');
     });
 
     it('should prompt user to select a port', async () => {
@@ -354,7 +362,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveRemotePort();
 
       expect(resolver['port']).toBe('5432');
-      expect(mediator.forwardingParams.port).toBe('5432');
+      expect(mediator.processedArgs.port?.value).toBe('5432');
     });
 
     it('should prompt user to input a custom port', async () => {
@@ -364,7 +372,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveRemotePort();
 
       expect(resolver['port']).toBe('1234');
-      expect(mediator.forwardingParams.port).toBe('1234');
+      expect(mediator.processedArgs.port?.value).toBe('1234');
     });
   });
 
@@ -375,7 +383,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveLocalPort();
 
       expect(resolver['localPort']).toBe('5432');
-      expect(mediator.forwardingParams.localPort).toBe('5432');
+      expect(mediator.processedArgs['local-port']?.value).toBe('5432');
     });
 
     it('should use the same local port as the remote port', async () => {
@@ -385,7 +393,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveLocalPort();
 
       expect(resolver['localPort']).toBe('5432');
-      expect(mediator.forwardingParams.localPort).toBe('5432');
+      expect(mediator.processedArgs['local-port']?.value).toBe('5432');
     });
 
     it('should prompt user to input a custom local port', async () => {
@@ -396,7 +404,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveLocalPort();
 
       expect(resolver['localPort']).toBe('1234');
-      expect(mediator.forwardingParams.localPort).toBe('1234');
+      expect(mediator.processedArgs['local-port']?.value).toBe('1234');
     });
   });
 

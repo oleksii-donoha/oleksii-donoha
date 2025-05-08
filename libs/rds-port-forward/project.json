@@ -1,0 +1,11 @@
+{
+  "root": "libs/rds-port-forward",
+  "targets": {
+    "cli": {
+      "executor": "@nx/js:node",
+      "options": {
+        "buildTarget": "@oleksii-donoha/rds-port-forward:build"
+      }
+    }
+  }
+}

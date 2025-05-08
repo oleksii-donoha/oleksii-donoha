@@ -2,10 +2,17 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Mediator } from './mediator.js';
 
-export type Arg = {
+type SkippableArg = {
+  skippable: true;
   value: string | undefined;
-  skippable?: boolean;
 };
+
+type RequiredArg = {
+  skippable: false;
+  value: string;
+};
+
+export type Arg = SkippableArg | RequiredArg;
 
 const argKeys = [
   'cluster',
@@ -69,6 +76,7 @@ export class CliManager {
       acc[argKey] = parsedArgv[argKey];
       return acc;
     }, {} as Pick<typeof parsedArgv, ArgKey>);
+    this.mediator.verbose = parsedArgv.verbose ?? false;
   }
 
   get equivalent() {
@@ -79,5 +87,15 @@ export class CliManager {
       throw new Error('There is no collected argument data from resolvers');
     }
     return this.mediator.processedArgs;
+  }
+
+  public formatCliArgs(format: 'full' | 'only-required') {
+    const args = Object.entries(this.equivalent).reduce((acc, [key, arg]) => {
+      if (!arg.value || (format === 'only-required' && arg.skippable))
+        return acc;
+      acc.push(`--${key} ${arg.value}`);
+      return acc;
+    }, [] as string[]);
+    return args.join(' ');
   }
 }

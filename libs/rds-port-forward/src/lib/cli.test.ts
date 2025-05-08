@@ -66,4 +66,45 @@ describe('CliManager', () => {
       });
     });
   });
+  describe('formatCliArgs', () => {
+    it('should format all CLI arguments when format is "full"', () => {
+      argv = ['node', 'script.js', '--cluster', 'test-cluster'];
+      mediator.processedArgs = {
+        cluster: { value: 'test-cluster', skippable: false },
+        service: { value: 'test-service', skippable: true },
+        port: { value: '5432', skippable: false },
+      };
+      const cliManager = new CliManager(argv, mediator);
+
+      const result = cliManager.formatCliArgs('full');
+      expect(result).toBe(
+        '--cluster test-cluster --service test-service --port 5432'
+      );
+    });
+
+    it('should format only required CLI arguments when format is "only-required"', () => {
+      argv = ['node', 'script.js', '--cluster', 'test-cluster'];
+      mediator.processedArgs = {
+        cluster: { value: 'test-cluster', skippable: false },
+        service: { value: 'test-service', skippable: true },
+        port: { value: '5432', skippable: false },
+      };
+      const cliManager = new CliManager(argv, mediator);
+
+      const result = cliManager.formatCliArgs('only-required');
+      expect(result).toBe('--cluster test-cluster --port 5432');
+    });
+
+    it('should skip arguments with undefined values', () => {
+      argv = ['node', 'script.js'];
+      mediator.processedArgs = {
+        cluster: { value: undefined, skippable: true },
+        service: { value: 'test-service', skippable: true },
+      };
+      const cliManager = new CliManager(argv, mediator);
+
+      const result = cliManager.formatCliArgs('full');
+      expect(result).toBe('--service test-service');
+    });
+  });
 });
