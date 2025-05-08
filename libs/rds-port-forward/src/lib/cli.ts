@@ -1,4 +1,3 @@
-import { Logger } from 'winston';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Mediator } from './mediator.js';
@@ -14,21 +13,16 @@ const argKeys = [
   'container',
   'db-host',
   'db-host-from-container-env',
+  'port',
+  'local-port',
 ] as const;
 
 export type ArgKey = (typeof argKeys)[number];
 
-export enum CliOptionType {
-  Skippable,
-  Required,
-}
-
 export class CliManager {
-  private logger: Logger;
   private mediator: Mediator;
 
-  constructor(logger: Logger, mediator: Mediator, argv: typeof process.argv) {
-    this.logger = logger;
+  constructor(argv: typeof process.argv, mediator: Mediator) {
     this.mediator = mediator;
     const parsedArgv = yargs()
       .scriptName('rds-port-forward')
@@ -55,6 +49,18 @@ export class CliManager {
           describe: `Target container's environment variable whose value points to the DB hostname (or IP)`,
           type: 'string',
         },
+        port: {
+          describe: 'Remote port to forward traffic to',
+          type: 'string',
+        },
+        'local-port': {
+          describe: 'Port on your machine that will listen to requests',
+          type: 'string',
+        },
+        verbose: {
+          describe: 'Prints more logs for debugging',
+          type: 'boolean',
+        },
       })
       .conflicts('db-host', 'db-host-from-container-env')
       .parseSync(hideBin(argv));
@@ -62,17 +68,13 @@ export class CliManager {
     this.mediator.rawArgs = argKeys.reduce((acc, argKey) => {
       acc[argKey] = parsedArgv[argKey];
       return acc;
-    }, {} as Record<ArgKey, string | undefined>);
-    this.logger.debug(
-      'Parsed incoming CLI arguments to',
-      this.mediator.rawArgs
-    );
+    }, {} as Pick<typeof parsedArgv, ArgKey>);
   }
 
   get equivalent() {
     if (
       !this.mediator.processedArgs ||
-      Object.keys(this.mediator).length === 0
+      Object.keys(this.mediator.processedArgs).length === 0
     ) {
       throw new Error('There is no collected argument data from resolvers');
     }

@@ -1,10 +1,10 @@
 import { DesiredStatus, ECSClient } from '@aws-sdk/client-ecs';
 import { confirm, select } from '@inquirer/prompts';
 import Fuse from 'fuse.js';
-import { paginate } from './client/index.js';
-import { type RawDescribeTasksInput } from './client/util.js';
+import { paginate } from '../client/index.js';
+import { type RawDescribeTasksInput } from '../client/util.js';
 import { type Logger } from 'winston';
-import { Mediator } from './mediator.js';
+import { Mediator } from '../mediator.js';
 
 export class TargetResolver {
   private readonly ecsClient: ECSClient;

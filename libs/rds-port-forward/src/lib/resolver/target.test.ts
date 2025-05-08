@@ -1,16 +1,16 @@
 import { ECSClient } from '@aws-sdk/client-ecs';
 import { confirm, select } from '@inquirer/prompts';
-import { paginate } from './client/index.js';
-import { TargetResolver } from './targetResolver.js';
+import { paginate } from '../client/index.js';
+import { TargetResolver } from './target.js';
 import { Logger } from 'winston';
-import { CliManager } from './cli.js';
+import { mediator } from '../mediator.js';
 
 vi.mock('@inquirer/prompts', () => ({
   select: vi.fn(),
   confirm: vi.fn(),
 }));
 
-vi.mock('./client/index.js', () => ({
+vi.mock('../client/index.js', () => ({
   paginate: vi.fn(),
 }));
 
@@ -18,7 +18,6 @@ describe('TargetResolver', () => {
   let ecsClientMock: ECSClient;
   let winstonMock: Logger;
   let targetResolver: TargetResolver;
-  let cliManager: CliManager;
 
   beforeEach(() => {
     ecsClientMock = {
@@ -27,10 +26,7 @@ describe('TargetResolver', () => {
     winstonMock = {
       debug: vi.fn(),
     } as unknown as Logger;
-    cliManager = {
-      markCliOptionAs: vi.fn(),
-    } as unknown as CliManager;
-    targetResolver = new TargetResolver(ecsClientMock, winstonMock, cliManager);
+    targetResolver = new TargetResolver(ecsClientMock, winstonMock, mediator);
   });
 
   afterEach(() => {
@@ -214,9 +210,11 @@ describe('TargetResolver', () => {
 
     it('should resolve and set the task ID', async () => {
       targetResolver['clusterName'] = 'test-cluster';
-      vi.mocked(paginate).mockResolvedValueOnce([
-        'arn:aws:ecs:region:123456789012:task/test-task',
-      ]);
+      vi.mocked(paginate)
+        .mockResolvedValueOnce([
+          'arn:aws:ecs:region:123456789012:task/test-task',
+        ])
+        .mockResolvedValueOnce([{ taskDefinitionArn: 'foo' }]);
 
       await targetResolver.resolveTask();
 
@@ -232,24 +230,18 @@ describe('TargetResolver', () => {
       );
     });
 
-    it('should resolve and set the task ID when only one task is found', async () => {
-      targetResolver['clusterName'] = 'test-cluster';
-      vi.mocked(paginate).mockResolvedValueOnce([
-        'arn:aws:ecs:region:123456789012:task/test-task',
-      ]);
-
-      await targetResolver.resolveTask();
-
-      expect(targetResolver['taskId']).toBe('test-task');
-    });
-
-    it('should resolve and set the task ID when serviceName is set and tasks are found', async () => {
+    it('should resolve and set the task ID when serviceName is set and multiple tasks are found', async () => {
       targetResolver['clusterName'] = 'test-cluster';
       targetResolver['serviceName'] = 'test-service';
-      vi.mocked(paginate).mockResolvedValueOnce([
-        'arn:aws:ecs:region:123456789012:task/test-task-1',
-        'arn:aws:ecs:region:123456789012:task/test-task-2',
-      ]);
+      vi.mocked(paginate)
+        .mockResolvedValueOnce([
+          'arn:aws:ecs:region:123456789012:task/test-task-1',
+          'arn:aws:ecs:region:123456789012:task/test-task-2',
+        ])
+        .mockResolvedValueOnce([
+          { taskDefinitionArn: 'foo' },
+          { taskDefinitionArn: 'bar' },
+        ]);
 
       await targetResolver.resolveTask();
 
@@ -258,27 +250,31 @@ describe('TargetResolver', () => {
 
     it('should resolve and set the task ID when multiple tasks are found and one is selected', async () => {
       targetResolver['clusterName'] = 'test-cluster';
-      vi.mocked(paginate).mockResolvedValueOnce([
-        'arn:aws:ecs:region:123456789012:task/test-task-1',
-        'arn:aws:ecs:region:123456789012:task/test-task-2',
-      ]);
-      vi.mocked(paginate).mockResolvedValueOnce([
-        {
-          taskArn: 'arn:aws:ecs:region:123456789012:task/test-task-1',
-          tags: [{ key: 'Name', value: 'Task 1' }],
-          taskDefinitionArn:
-            'arn:aws:ecs:region:123456789012:task-def/task-def-1',
-          containers: [{ name: 'container-1', image: 'image-1' }],
-        },
-        {
-          taskArn: 'arn:aws:ecs:region:123456789012:task/test-task-2',
-          tags: [{ key: 'Name', value: 'Task 2' }],
-          taskDefinitionArn:
-            'arn:aws:ecs:region:123456789012:task-def/task-def-2',
-          containers: [{ name: 'container-2', image: 'image-2' }],
-        },
-      ]);
-      vi.mocked(select).mockResolvedValueOnce('test-task-2');
+      vi.mocked(paginate)
+        .mockResolvedValueOnce([
+          'arn:aws:ecs:region:123456789012:task/test-task-1',
+          'arn:aws:ecs:region:123456789012:task/test-task-2',
+        ])
+        .mockResolvedValueOnce([
+          {
+            taskArn: 'arn:aws:ecs:region:123456789012:task/test-task-1',
+            tags: [{ key: 'Name', value: 'Task 1' }],
+            taskDefinitionArn:
+              'arn:aws:ecs:region:123456789012:task-def/task-def-1',
+            containers: [{ name: 'container-1', image: 'image-1' }],
+          },
+          {
+            taskArn: 'arn:aws:ecs:region:123456789012:task/test-task-2',
+            tags: [{ key: 'Name', value: 'Task 2' }],
+            taskDefinitionArn:
+              'arn:aws:ecs:region:123456789012:task-def/task-def-2',
+            containers: [{ name: 'container-2', image: 'image-2' }],
+          },
+        ]);
+      vi.mocked(select).mockResolvedValueOnce({
+        taskId: 'test-task-2',
+        taskDefinition: 'foo',
+      });
 
       await targetResolver.resolveTask();
 

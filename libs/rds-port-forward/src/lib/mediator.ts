@@ -2,7 +2,7 @@ import { Arg, ArgKey } from './cli.js';
 
 export type Mediator = {
   processedArgs: Partial<Record<ArgKey, Arg>>;
-  rawArgs: Partial<Record<ArgKey, string | undefined >>;
+  rawArgs: Partial<Record<ArgKey, string | undefined>>;
   target: {
     taskId: string | undefined;
     taskDefinition: string | undefined;
@@ -11,6 +11,8 @@ export type Mediator = {
   };
   forwardingParams: {
     dbHost: string | undefined;
+    port: string | undefined;
+    localPort: string | undefined;
   };
 };
 
@@ -25,5 +27,7 @@ export const mediator: Mediator = {
   },
   forwardingParams: {
     dbHost: undefined,
+    port: undefined,
+    localPort: undefined,
   },
 };

@@ -1,24 +1,26 @@
-import { CliManager, CliOptionType } from './cli.js';
-import { Logger } from 'winston';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { CliManager } from './cli.js';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { Mediator } from './mediator.js';
 
 describe('CliManager', () => {
-  let logger: Logger;
   let argv: string[];
+  let mediator: Mediator;
 
   beforeEach(() => {
-    logger = {
-      debug: vi.fn(),
-      error: vi.fn(),
-    } as unknown as Logger;
+    mediator = {
+      rawArgs: {},
+      processedArgs: {},
+      forwardingParams: {},
+      target: {},
+    } as unknown as Mediator;
   });
 
   describe('constructor', () => {
     it('should parse CLI arguments and initialize incoming args', () => {
       argv = ['node', 'script.js', '--cluster', 'test-cluster'];
-      const cliManager = new CliManager(logger, argv);
+      new CliManager(argv, mediator);
 
-      expect(cliManager['incoming']).toEqual({
+      expect(mediator.rawArgs).toEqual({
         cluster: 'test-cluster',
         service: undefined,
         container: undefined,
@@ -31,21 +33,20 @@ describe('CliManager', () => {
   describe('equivalent', () => {
     it('should throw an error if equivalent is not set', () => {
       argv = ['node', 'script.js', '--cluster', 'test-cluster'];
-      const cliManager = new CliManager(logger, argv);
+      const cliManager = new CliManager(argv, mediator);
 
       expect(() => cliManager.equivalent).toThrow(
-        'The equivalent CLI args are not set. Did you forget to set them while processing the target?'
+        'There is no collected argument data from resolvers'
       );
     });
 
     it('should return the equivalent CLI args if set', () => {
       argv = ['node', 'script.js', '--cluster', 'test-cluster'];
-      const cliManager = new CliManager(logger, argv);
-      cliManager.markCliOptionAs(
-        CliOptionType.Skippable,
-        'cluster',
-        'test-cluster'
-      );
+      mediator.processedArgs.cluster = {
+        value: 'test-cluster',
+        skippable: true,
+      };
+      const cliManager = new CliManager(argv, mediator);
 
       expect(cliManager.equivalent).toEqual({
         cluster: { value: 'test-cluster', skippable: true },
@@ -54,36 +55,14 @@ describe('CliManager', () => {
 
     it('equivalent args should differ from initial ones when overwritten', () => {
       argv = ['node', 'script.js', '--service', 'test-service'];
-      const cliManager = new CliManager(logger, argv);
-      cliManager.markCliOptionAs(
-        CliOptionType.Required,
-        'service',
-        'other-service'
-      );
+      mediator.processedArgs.service = {
+        value: 'other-service',
+        skippable: false,
+      };
+      const cliManager = new CliManager(argv, mediator);
 
       expect(cliManager.equivalent).toEqual({
         service: { value: 'other-service', skippable: false },
-      });
-    });
-  });
-  describe('markAs', () => {
-    it('should correctly set the skippable flag based on the option type', () => {
-      argv = ['node', 'script.js', '--cluster', 'test-cluster'];
-      const cliManager = new CliManager(logger, argv);
-      cliManager.markCliOptionAs(
-        CliOptionType.Skippable,
-        'cluster',
-        'test-cluster'
-      );
-      cliManager.markCliOptionAs(
-        CliOptionType.Required,
-        'container',
-        'test-container'
-      );
-
-      expect(cliManager.equivalent).toEqual({
-        container: { value: 'test-container', skippable: false },
-        cluster: { value: 'test-cluster', skippable: true },
       });
     });
   });
