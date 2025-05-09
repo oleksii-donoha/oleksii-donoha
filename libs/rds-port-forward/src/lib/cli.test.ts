@@ -77,9 +77,7 @@ describe('CliManager', () => {
       const cliManager = new CliManager(argv, mediator);
 
       const result = cliManager.formatCliArgs('full');
-      expect(result).toBe(
-        '--cluster test-cluster --service test-service --port 5432'
-      );
+      expect(result).toMatchSnapshot();
     });
 
     it('should format only required CLI arguments when format is "only-required"', () => {
@@ -92,7 +90,7 @@ describe('CliManager', () => {
       const cliManager = new CliManager(argv, mediator);
 
       const result = cliManager.formatCliArgs('only-required');
-      expect(result).toBe('--cluster test-cluster --port 5432');
+      expect(result).toMatchSnapshot();
     });
 
     it('should skip arguments with undefined values', () => {
@@ -104,7 +102,7 @@ describe('CliManager', () => {
       const cliManager = new CliManager(argv, mediator);
 
       const result = cliManager.formatCliArgs('full');
-      expect(result).toBe('--service test-service');
+      expect(result).toMatchSnapshot();
     });
   });
 });

@@ -93,7 +93,7 @@ export class CliManager {
     const args = Object.entries(this.equivalent).reduce((acc, [key, arg]) => {
       if (!arg.value || (format === 'only-required' && arg.skippable))
         return acc;
-      acc.push(`--${key} ${arg.value}`);
+      acc.push(`\t--${key} ${arg.value} \\\n`);
       return acc;
     }, [] as string[]);
     return args.join(' ');

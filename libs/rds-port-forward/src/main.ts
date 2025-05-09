@@ -5,6 +5,7 @@ import { createLogger, format, transports } from 'winston';
 import { mediator } from './lib/mediator.js';
 import { CliManager } from './lib/cli.js';
 import { ForwardingParamsResolver } from './lib/resolver/forwardingParams.js';
+import { OsManager } from './lib/os.js';
 
 const main = async () => {
   const cli = new CliManager(process.argv, mediator);
@@ -23,6 +24,7 @@ const main = async () => {
       ),
     }),
   });
+  const osManager = new OsManager(logger);
   const client = new ECSClient({});
   const targetResolver = new TargetResolver(client, logger, mediator);
   const target = await targetResolver
@@ -31,7 +33,6 @@ const main = async () => {
     .then((service) => service.resolveTask())
     .then((task) => task.resolveContainer())
     .then((container) => container.target);
-  logger.info(target);
   const forwardingParamsResolver = new ForwardingParamsResolver(
     client,
     logger,
@@ -42,9 +43,19 @@ const main = async () => {
     .then((dbHost) => dbHost.resolveRemotePort())
     .then((port) => port.resolveLocalPort())
     .then((port) => port.forwardingParams);
-  logger.info(params);
-  logger.info(cli.formatCliArgs('full'));
-  logger.info(cli.formatCliArgs('only-required'));
+
+  const message = [
+    'You can start an identical session next time by running:',
+    `\x1b[32m[Required args only]\x1b[0m npx @oleksii-donoha/rds-port-forward \\\n ${cli.formatCliArgs(
+      'only-required'
+    )}`,
+    `\x1b[34m[Full command]\x1b[0m npx @oleksii-donoha/rds-port-forward \\\n ${cli.formatCliArgs(
+      'full'
+    )}`,
+  ];
+  logger.info(message.join('\n\n'));
+  const exitCode = await osManager.runSession(target, params);
+  process.exit(exitCode ?? 0);
 };
 
 main().then();

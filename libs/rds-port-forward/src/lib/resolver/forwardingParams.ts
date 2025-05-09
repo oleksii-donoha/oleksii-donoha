@@ -6,9 +6,9 @@ import { paginate } from '../client/index.js';
 import { Mediator } from '../mediator.js';
 
 type ForwardingParams = {
-  host: string;
-  portNumber: string;
-  localPortNumber: string;
+  host: string[];
+  portNumber: string[];
+  localPortNumber: string[];
 };
 
 export class ForwardingParamsResolver {
@@ -45,9 +45,9 @@ export class ForwardingParamsResolver {
       );
     }
     return JSON.stringify({
-      host: this.dbHost,
-      portNumber: this.port,
-      localPortNumber: this.localPort,
+      host: [this.dbHost],
+      portNumber: [this.port],
+      localPortNumber: [this.localPort],
     } as ForwardingParams);
   }
   protected async getContainerEnv(): Promise<{ [x: string]: string }> {

@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CliManager > formatCliArgs > should format all CLI arguments when format is "full" 1`] = `
+"	--cluster test-cluster \\
+ 	--service test-service \\
+ 	--port 5432 \\
+"
+`;
+
+exports[`CliManager > formatCliArgs > should format only required CLI arguments when format is "only-required" 1`] = `
+"	--cluster test-cluster \\
+ 	--port 5432 \\
+"
+`;
+
+exports[`CliManager > formatCliArgs > should skip arguments with undefined values 1`] = `
+"	--service test-service \\
+"
+`;

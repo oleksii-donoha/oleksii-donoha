@@ -51,9 +51,9 @@ describe('ForwardingParamsResolver', () => {
 
       expect(resolver.forwardingParams).toEqual(
         JSON.stringify({
-          host: 'localhost',
-          portNumber: '5432',
-          localPortNumber: '5432',
+          host: ['localhost'],
+          portNumber: ['5432'],
+          localPortNumber: ['5432'],
         })
       );
     });
