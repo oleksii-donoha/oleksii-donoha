@@ -1,4 +1,6 @@
 import nx from '@nx/eslint-plugin';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
 export default [
   ...nx.configs['flat/base'],
@@ -41,6 +43,14 @@ export default [
       '**/*.mjs',
     ],
     // Override or add rules here
-    rules: {},
+    rules: {
+      'no-console': 'error',
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+    },
+    plugins: {
+      'simple-import-sort': simpleImportSort,
+    },
   },
+  eslintPluginPrettierRecommended,
 ];

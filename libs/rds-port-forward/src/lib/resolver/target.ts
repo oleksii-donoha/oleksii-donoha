@@ -1,19 +1,23 @@
 import { DesiredStatus, ECSClient } from '@aws-sdk/client-ecs';
 import { confirm, select } from '@inquirer/prompts';
 import Fuse from 'fuse.js';
+import { type Logger } from 'winston';
+
 import { paginate } from '../client/index.js';
 import { type RawDescribeTasksInput } from '../client/util.js';
-import { type Logger } from 'winston';
-import { Mediator } from '../mediator.js';
+import { type Mediator } from '../mediator.js';
 
+/**
+ * Resolves the ECS target that needs to be passed to the SSM session plugin
+ */
 export class TargetResolver {
-  private readonly ecsClient: ECSClient;
-  private readonly logger: Logger;
-  private clusterName: string | undefined;
-  private taskId: string | undefined;
-  private containerRuntimeId: string | undefined;
-  private serviceName: string | undefined;
-  private mediator: Mediator;
+  protected readonly ecsClient: ECSClient;
+  protected readonly logger: Logger;
+  protected clusterName: string | undefined;
+  protected taskId: string | undefined;
+  protected containerRuntimeId: string | undefined;
+  protected serviceName: string | undefined;
+  protected mediator: Mediator;
 
   constructor(ecsClient: ECSClient, logger: Logger, mediator: Mediator) {
     this.ecsClient = ecsClient;
@@ -25,20 +29,23 @@ export class TargetResolver {
     this.mediator = mediator;
   }
 
-  private failIfClusterNameIsNotSet() {
+  protected failIfClusterNameIsNotSet() {
     if (!this.clusterName) {
       throw new Error(
-        'Cluster name is not set. Did you run `resolveCluster()` first?'
+        'Cluster name is not set. Did you run `resolveCluster()` first?',
       );
     }
   }
 
-  private failIfTaskIdIsNotSet() {
+  protected failIfTaskIdIsNotSet() {
     if (!this.taskId) {
       throw new Error('Task ID is not set. Did you run `resolveTask()` first?');
     }
   }
 
+  /**
+   * Returns a formatted string describing target in a format expected by the SSM session plugin
+   */
   get target() {
     this.failIfClusterNameIsNotSet();
     this.failIfTaskIdIsNotSet();
@@ -48,6 +55,10 @@ export class TargetResolver {
     return `ecs:${this.clusterName}_${this.taskId}_${this.containerRuntimeId}`;
   }
 
+  /**
+   * Resolves the name of the cluster that hosts the target task
+   * @returns self for further chaining
+   */
   async resolveCluster(): Promise<TargetResolver> {
     const allClusterArns = await paginate(this.ecsClient, {});
     if (allClusterArns.length === 0) {
@@ -56,7 +67,7 @@ export class TargetResolver {
     const clusterNames = allClusterArns.map((arn) => arn.split('/')[1]);
     if (clusterNames.length === 1) {
       this.logger.debug(
-        `There is only one cluster ${clusterNames[0]}, using it`
+        `There is only one cluster ${clusterNames[0]}, using it`,
       );
       this.clusterName = clusterNames[0];
       this.mediator.processedArgs.cluster = {
@@ -66,7 +77,7 @@ export class TargetResolver {
       this.mediator.target.clusterName = this.clusterName;
       return this;
     }
-    this.logger.debug('Found clusters', clusterNames);
+    this.logger.debug(`Found clusters: ${clusterNames}`);
     this.clusterName = await select({
       message: '🌍 Select the target ECS cluster',
       choices: clusterNames.map((value) => ({ value })),
@@ -79,11 +90,17 @@ export class TargetResolver {
     return this;
   }
 
+  /**
+   * Resolves the name of the service that manages the target task
+   * Does this only if `--service` parameter was supplied, because service has limited implication for the further steps
+   * Service can help narrow down potential tasks for big clusters, so it's still recommended to use.
+   * @returns self for further chaining
+   */
   async resolveService(serviceNameLike?: string): Promise<TargetResolver> {
     this.failIfClusterNameIsNotSet();
     if (!serviceNameLike) {
       this.logger.debug(
-        'Service name not provided, skipping service resolution'
+        'Service name not provided, skipping service resolution',
       );
       this.mediator.processedArgs.service = {
         skippable: true,
@@ -118,7 +135,7 @@ export class TargetResolver {
       .map((match) => match.item);
     if (potentialServices.length === 0) {
       throw new Error(
-        `No services matching or similar to '${serviceNameLike}' were found`
+        `No services matching or similar to '${serviceNameLike}' were found`,
       );
     }
     if (potentialServices.length === 1) {
@@ -143,7 +160,7 @@ export class TargetResolver {
         return { value: s };
       }),
     });
-    this.logger.debug('Resolved service name', this.serviceName);
+    this.logger.debug(`Resolved service name to ${this.serviceName}`);
     this.mediator.processedArgs.service = {
       skippable: false,
       value: this.serviceName as string,
@@ -151,6 +168,10 @@ export class TargetResolver {
     return this;
   }
 
+  /**
+   * Resolves the ID and definition ARN of the target task
+   * @returns self for further chaining
+   */
   async resolveTask(): Promise<TargetResolver> {
     this.failIfClusterNameIsNotSet();
     const allTaskArns = await paginate(this.ecsClient, {
@@ -161,7 +182,7 @@ export class TargetResolver {
 
     if (allTaskArns.length === 0) {
       throw new Error(
-        'No running tasks matching the input parameters were found'
+        'No running tasks matching the input parameters were found',
       );
     }
 
@@ -177,7 +198,7 @@ export class TargetResolver {
       this.logger.debug(
         this.serviceName
           ? 'Service name is set, selecting the first task as target'
-          : 'Only one task found, using it as target'
+          : 'Only one task found, using it as target',
       );
       this.taskId = allTaskArns[0].split('/').pop();
       this.mediator.target.taskId = this.taskId;
@@ -204,12 +225,16 @@ export class TargetResolver {
       }),
     });
     this.taskId = taskId;
-    this.logger.debug('Resolved the task to', this.taskId);
+    this.logger.debug(`Resolved the task to ${this.taskId}`);
     this.mediator.target.taskId = this.taskId;
     this.mediator.target.taskDefinition = taskDefinition;
     return this;
   }
 
+  /**
+   * Resolves the name and runtime ID of the container that will be used for forwarding
+   * @returns self for further chaining
+   */
   async resolveContainer(): Promise<TargetResolver> {
     this.failIfClusterNameIsNotSet();
     this.failIfTaskIdIsNotSet();
@@ -220,7 +245,7 @@ export class TargetResolver {
     } as RawDescribeTasksInput);
     if (taskDetails.length === 0) {
       throw new Error(
-        `Task with ID '${this.taskId}' was not found. Did it get evicted in the meantime?`
+        `Task with ID '${this.taskId}' was not found. Did it get evicted in the meantime?`,
       );
     }
     const task = taskDetails[0];
@@ -247,7 +272,7 @@ export class TargetResolver {
       }),
     });
     this.containerRuntimeId = runtimeId;
-    this.logger.debug('Resolved runtime ID to', this.containerRuntimeId);
+    this.logger.debug(`Resolved runtime ID to ${this.containerRuntimeId}`);
     this.mediator.target.containerName = name;
     this.mediator.processedArgs.container = {
       value: name as string,

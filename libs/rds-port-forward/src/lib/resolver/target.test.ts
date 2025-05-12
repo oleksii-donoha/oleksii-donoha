@@ -1,9 +1,10 @@
 import { ECSClient } from '@aws-sdk/client-ecs';
 import { confirm, select } from '@inquirer/prompts';
-import { paginate } from '../client/index.js';
-import { TargetResolver } from './target.js';
 import { Logger } from 'winston';
+
+import { paginate } from '../client/index.js';
 import { mediator } from '../mediator.js';
+import { TargetResolver } from './target.js';
 
 vi.mock('@inquirer/prompts', () => ({
   select: vi.fn(),
@@ -36,14 +37,14 @@ describe('TargetResolver', () => {
   describe('target', () => {
     it('should throw an error if clusterName is not set', () => {
       expect(() => targetResolver.target).toThrowError(
-        'Cluster name is not set. Did you run `resolveCluster()` first?'
+        'Cluster name is not set. Did you run `resolveCluster()` first?',
       );
     });
 
     it('should throw an error if taskId is not set', () => {
       targetResolver['clusterName'] = 'test-cluster';
       expect(() => targetResolver.target).toThrowError(
-        'Task ID is not set. Did you run `resolveTask()` first?'
+        'Task ID is not set. Did you run `resolveTask()` first?',
       );
     });
 
@@ -51,7 +52,7 @@ describe('TargetResolver', () => {
       targetResolver['clusterName'] = 'test-cluster';
       targetResolver['taskId'] = 'test-task';
       expect(() => targetResolver.target).toThrowError(
-        'Target container runtime ID was not resolved'
+        'Target container runtime ID was not resolved',
       );
     });
 
@@ -60,7 +61,7 @@ describe('TargetResolver', () => {
       targetResolver['taskId'] = 'test-task';
       targetResolver['containerRuntimeId'] = 'test-runtime-id';
       expect(targetResolver.target).toBe(
-        'ecs:test-cluster_test-task_test-runtime-id'
+        'ecs:test-cluster_test-task_test-runtime-id',
       );
     });
   });
@@ -81,7 +82,7 @@ describe('TargetResolver', () => {
       vi.mocked(paginate).mockResolvedValueOnce([]);
 
       await expect(targetResolver.resolveCluster()).rejects.toThrowError(
-        'No ECS clusters found'
+        'No ECS clusters found',
       );
     });
 
@@ -115,16 +116,16 @@ describe('TargetResolver', () => {
   describe('resolveService', () => {
     it('should throw an error if clusterName is not set', async () => {
       await expect(
-        targetResolver.resolveService('test-service')
+        targetResolver.resolveService('test-service'),
       ).rejects.toThrowError(
-        'Cluster name is not set. Did you run `resolveCluster()` first?'
+        'Cluster name is not set. Did you run `resolveCluster()` first?',
       );
     });
 
     it('should return if no service name was provided to match', async () => {
       targetResolver['clusterName'] = 'test-cluster';
       await expect(targetResolver.resolveService()).resolves.toBe(
-        targetResolver
+        targetResolver,
       );
     });
 
@@ -143,7 +144,7 @@ describe('TargetResolver', () => {
       vi.mocked(paginate).mockResolvedValueOnce([]);
 
       await expect(
-        targetResolver.resolveService('test-service')
+        targetResolver.resolveService('test-service'),
       ).rejects.toThrowError('No services found in the cluster');
     });
 
@@ -154,9 +155,9 @@ describe('TargetResolver', () => {
       ]);
 
       await expect(
-        targetResolver.resolveService('test-service')
+        targetResolver.resolveService('test-service'),
       ).rejects.toThrowError(
-        "No services matching or similar to 'test-service' were found"
+        "No services matching or similar to 'test-service' were found",
       );
     });
 
@@ -183,7 +184,7 @@ describe('TargetResolver', () => {
       vi.mocked(confirm).mockResolvedValueOnce(false);
 
       await expect(
-        targetResolver.resolveService('test-service')
+        targetResolver.resolveService('test-service'),
       ).rejects.toThrowError('Cannot use the only potential matching service');
     });
 
@@ -204,7 +205,7 @@ describe('TargetResolver', () => {
   describe('resolveTask', () => {
     it('should throw an error if clusterName is not set', async () => {
       await expect(targetResolver.resolveTask()).rejects.toThrowError(
-        'Cluster name is not set. Did you run `resolveCluster()` first?'
+        'Cluster name is not set. Did you run `resolveCluster()` first?',
       );
     });
 
@@ -226,7 +227,7 @@ describe('TargetResolver', () => {
       vi.mocked(paginate).mockResolvedValueOnce([]);
 
       await expect(targetResolver.resolveTask()).rejects.toThrowError(
-        'No running tasks matching the input parameters were found'
+        'No running tasks matching the input parameters were found',
       );
     });
 
@@ -289,7 +290,7 @@ describe('TargetResolver', () => {
       vi.mocked(paginate).mockResolvedValueOnce([]);
 
       await expect(targetResolver.resolveContainer()).rejects.toThrowError(
-        "Task with ID 'test-task' was not found. Did it get evicted in the meantime?"
+        "Task with ID 'test-task' was not found. Did it get evicted in the meantime?",
       );
     });
 
@@ -303,7 +304,7 @@ describe('TargetResolver', () => {
       ]);
 
       await expect(targetResolver.resolveContainer()).rejects.toThrowError(
-        'No containers found inside the task test-task'
+        'No containers found inside the task test-task',
       );
     });
 

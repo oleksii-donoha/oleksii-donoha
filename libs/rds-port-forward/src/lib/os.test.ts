@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ChildProcess, execSync, spawn } from 'child_process';
-import { Logger } from 'winston';
-import { OsManager, isExecutableInPath } from './os.js';
 import { EventEmitter } from 'events';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Logger } from 'winston';
+
+import { isExecutableInPath, OsManager } from './os.js';
 
 vi.mock('child_process', () => ({
   execSync: vi.fn(),
@@ -41,7 +42,7 @@ describe('OsManager', () => {
         throw new Error('not found');
       });
       expect(() => new OsManager(mockLogger)).toThrow(
-        'AWS CLI v2 executable was not found. Check out the documentation and install it first: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html'
+        'AWS CLI v2 executable was not found. Check out the documentation and install it first: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html',
       );
     });
 
@@ -52,7 +53,7 @@ describe('OsManager', () => {
           throw new Error('not found');
         });
       expect(() => new OsManager(mockLogger)).toThrow(
-        'Session manager plugin executable was not found. Check out the documentation and install it first: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html'
+        'Session manager plugin executable was not found. Check out the documentation and install it first: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html',
       );
     });
 
@@ -95,7 +96,7 @@ describe('OsManager', () => {
 
       expect(result).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Running the command: aws ssm start-session --target ${target} --parameters '${params}' --document-name AWS-StartPortForwardingSessionToRemoteHost`
+        `Running the command: aws ssm start-session --target ${target} --parameters '${params}' --document-name AWS-StartPortForwardingSessionToRemoteHost`,
       );
       expect(mockSpawn).toHaveBeenCalledWith(
         'aws',
@@ -109,7 +110,7 @@ describe('OsManager', () => {
           '--document-name',
           'AWS-StartPortForwardingSessionToRemoteHost',
         ],
-        { stdio: 'inherit', shell: true }
+        { stdio: 'inherit', shell: true },
       );
     });
 
@@ -159,7 +160,7 @@ describe('OsManager', () => {
 
       expect(result).toBe(1);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Child process exited with code 1'
+        'Child process exited with code 1',
       );
     });
 
@@ -179,7 +180,7 @@ describe('OsManager', () => {
 
       expect(result).toBeNull();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Child process terminated due to receipt of signal SIGTERM'
+        'Child process terminated due to receipt of signal SIGTERM',
       );
     });
   });

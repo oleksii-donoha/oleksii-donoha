@@ -1,7 +1,8 @@
-import { Task, type ECSClient } from '@aws-sdk/client-ecs';
+import { type ECSClient, Task } from '@aws-sdk/client-ecs';
 import { confirm, input, number, select } from '@inquirer/prompts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Logger } from 'winston';
+
 import { paginate } from '../client/index.js';
 import { Mediator } from '../mediator.js';
 import { ForwardingParamsResolver } from './forwardingParams.js';
@@ -54,7 +55,7 @@ describe('ForwardingParamsResolver', () => {
           host: ['localhost'],
           portNumber: ['5432'],
           localPortNumber: ['5432'],
-        })
+        }),
       );
     });
 
@@ -63,7 +64,7 @@ describe('ForwardingParamsResolver', () => {
       resolver['localPort'] = '5432';
 
       expect(() => resolver.forwardingParams).toThrow(
-        'DB host is not set. Did you run `resolveDbHost()` first?'
+        'DB host is not set. Did you run `resolveDbHost()` first?',
       );
     });
 
@@ -72,7 +73,7 @@ describe('ForwardingParamsResolver', () => {
       resolver['localPort'] = '5432';
 
       expect(() => resolver.forwardingParams).toThrow(
-        'DB port is not set. Did you run `resolveRemotePort()` first?'
+        'DB port is not set. Did you run `resolveRemotePort()` first?',
       );
     });
 
@@ -81,7 +82,7 @@ describe('ForwardingParamsResolver', () => {
       resolver['port'] = '5432';
 
       expect(() => resolver.forwardingParams).toThrow(
-        'Local port is not set. Did you run `resolveLocalPort()` first?'
+        'Local port is not set. Did you run `resolveLocalPort()` first?',
       );
     });
   });
@@ -164,7 +165,7 @@ describe('ForwardingParamsResolver', () => {
       ] as Task[]);
 
       await expect(resolver.resolveDbHost()).rejects.toThrow(
-        "Container ENV (and ENV overrides) doesn't have an ENV variable with the name 'DB_HOST'"
+        "Container ENV (and ENV overrides) doesn't have an ENV variable with the name 'DB_HOST'",
       );
     });
 
@@ -255,7 +256,7 @@ describe('ForwardingParamsResolver', () => {
       await resolver.resolveDbHost();
 
       expect(logger.info).toHaveBeenCalledWith(
-        `😿 The target container doesn't have ENV defined`
+        `😿 The target container doesn't have ENV defined`,
       );
     });
 
@@ -268,7 +269,7 @@ describe('ForwardingParamsResolver', () => {
       };
       vi.mocked(confirm).mockResolvedValueOnce(true);
       await expect(resolver.resolveDbHost()).rejects.toThrow(
-        'Cluster name was not resolved prior to resolving the DB host through container ENV'
+        'Cluster name was not resolved prior to resolving the DB host through container ENV',
       );
     });
 
@@ -281,7 +282,7 @@ describe('ForwardingParamsResolver', () => {
       };
       vi.mocked(confirm).mockResolvedValueOnce(true);
       await expect(resolver.resolveDbHost()).rejects.toThrow(
-        'Container name was not resolved prior to resolving the DB host through container ENV'
+        'Container name was not resolved prior to resolving the DB host through container ENV',
       );
     });
 
@@ -294,7 +295,7 @@ describe('ForwardingParamsResolver', () => {
       };
       vi.mocked(confirm).mockResolvedValueOnce(true);
       await expect(resolver.resolveDbHost()).rejects.toThrow(
-        'Task definition or ID were not resolved prior to resolving the DB host through container ENV'
+        'Task definition or ID were not resolved prior to resolving the DB host through container ENV',
       );
     });
 
@@ -412,7 +413,7 @@ describe('ForwardingParamsResolver', () => {
     resolver['port'] = undefined;
 
     await expect(resolver.resolveLocalPort()).rejects.toThrow(
-      'Remote port is not defined. Did you run `resolveRemotePort()` first?'
+      'Remote port is not defined. Did you run `resolveRemotePort()` first?',
     );
   });
 });

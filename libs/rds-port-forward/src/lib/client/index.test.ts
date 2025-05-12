@@ -1,10 +1,8 @@
 import { ECSClient, Task } from '@aws-sdk/client-ecs';
 import { describe, expect, it, Mock, vi } from 'vitest';
+
 import { paginate } from './index.js';
-import {
-  paginateClientCommand,
-  paginateDescribeTasksRequest,
-} from './util.js';
+import { paginateClientCommand, paginateDescribeTasksRequest } from './util.js';
 
 vi.mock('./util.js', async () => ({
   ...(await vi.importActual('./util.js')),
@@ -25,7 +23,7 @@ describe('paginate', () => {
 
     expect(paginateDescribeTasksRequest).toHaveBeenCalledWith(
       mockClient,
-      input
+      input,
     );
     expect(result).toEqual(mockTasks);
   });

@@ -2,22 +2,29 @@ import { DescribeTaskDefinitionCommand, ECSClient } from '@aws-sdk/client-ecs';
 import { confirm, input, number, select, Separator } from '@inquirer/prompts';
 import Fuse from 'fuse.js';
 import { Logger } from 'winston';
+
 import { paginate } from '../client/index.js';
 import { Mediator } from '../mediator.js';
 
+/**
+ * Forwarding params JSON expected by the SSM plugin
+ */
 type ForwardingParams = {
   host: string[];
   portNumber: string[];
   localPortNumber: string[];
 };
 
+/**
+ * Resolves forwarding parameters required to start the forwarding session
+ */
 export class ForwardingParamsResolver {
-  private readonly ecsClient: ECSClient;
-  private readonly logger: Logger;
-  private readonly mediator: Mediator;
-  private dbHost: string | undefined;
-  private port: string | undefined;
-  private localPort: string | undefined;
+  protected readonly ecsClient: ECSClient;
+  protected readonly logger: Logger;
+  protected readonly mediator: Mediator;
+  protected dbHost: string | undefined;
+  protected port: string | undefined;
+  protected localPort: string | undefined;
 
   constructor(ecsClient: ECSClient, logger: Logger, mediator: Mediator) {
     this.ecsClient = ecsClient;
@@ -28,20 +35,23 @@ export class ForwardingParamsResolver {
     this.localPort = undefined;
   }
 
+  /**
+   * Returns formatted forwarding parameters string that SSM session plugin expects as input
+   */
   get forwardingParams() {
     if (!this.dbHost) {
       throw new Error(
-        'DB host is not set. Did you run `resolveDbHost()` first?'
+        'DB host is not set. Did you run `resolveDbHost()` first?',
       );
     }
     if (!this.port) {
       throw new Error(
-        'DB port is not set. Did you run `resolveRemotePort()` first?'
+        'DB port is not set. Did you run `resolveRemotePort()` first?',
       );
     }
     if (!this.localPort) {
       throw new Error(
-        'Local port is not set. Did you run `resolveLocalPort()` first?'
+        'Local port is not set. Did you run `resolveLocalPort()` first?',
       );
     }
     return JSON.stringify({
@@ -50,34 +60,39 @@ export class ForwardingParamsResolver {
       localPortNumber: [this.localPort],
     } as ForwardingParams);
   }
+
   protected async getContainerEnv(): Promise<{ [x: string]: string }> {
     const { target } = this.mediator;
     if (!target.clusterName) {
       throw new Error(
-        'Cluster name was not resolved prior to resolving the DB host through container ENV'
+        'Cluster name was not resolved prior to resolving the DB host through container ENV',
       );
     }
     if (!target.containerName) {
       throw new Error(
-        'Container name was not resolved prior to resolving the DB host through container ENV'
+        'Container name was not resolved prior to resolving the DB host through container ENV',
       );
     }
     if (!target.taskDefinition || !target.taskId) {
       throw new Error(
-        'Task definition or ID were not resolved prior to resolving the DB host through container ENV'
+        'Task definition or ID were not resolved prior to resolving the DB host through container ENV',
       );
     }
     const command = new DescribeTaskDefinitionCommand({
       taskDefinition: target.taskDefinition,
     });
+    // Container overrides take precedence
     const containerEnv = (
       await this.ecsClient.send(command)
     ).taskDefinition?.containerDefinitions
       ?.find((container) => container.name === target.containerName)
-      ?.environment?.reduce((acc, { name, value }) => {
-        acc[name as string] = value as string;
-        return acc;
-      }, {} as { [name: string]: string });
+      ?.environment?.reduce(
+        (acc, { name, value }) => {
+          acc[name as string] = value as string;
+          return acc;
+        },
+        {} as { [name: string]: string },
+      );
     const envOverrides = (
       await paginate(this.ecsClient, {
         taskArns: [target.taskId],
@@ -85,16 +100,23 @@ export class ForwardingParamsResolver {
       })
     )[0].overrides?.containerOverrides
       ?.find((override) => override.name === target.containerName)
-      ?.environment?.reduce((acc, pair) => {
-        acc[pair.name as string] = pair.value as string;
-        return acc;
-      }, {} as { [name: string]: string });
+      ?.environment?.reduce(
+        (acc, pair) => {
+          acc[pair.name as string] = pair.value as string;
+          return acc;
+        },
+        {} as { [name: string]: string },
+      );
     return {
       ...containerEnv,
       ...envOverrides,
     };
   }
 
+  /**
+   * Resolves DB host address
+   * @returns self for further chaining
+   */
   public async resolveDbHost(): Promise<ForwardingParamsResolver> {
     const { rawArgs } = this.mediator;
     if (rawArgs['db-host']) {
@@ -112,7 +134,7 @@ export class ForwardingParamsResolver {
       const containerEnv = await this.getContainerEnv();
       if (!containerEnv[varToLookup]) {
         throw new Error(
-          `Container ENV (and ENV overrides) doesn't have an ENV variable with the name '${varToLookup}'`
+          `Container ENV (and ENV overrides) doesn't have an ENV variable with the name '${varToLookup}'`,
         );
       }
       this.dbHost = containerEnv[varToLookup];
@@ -163,6 +185,10 @@ export class ForwardingParamsResolver {
     return this;
   }
 
+  /**
+   * Resolves the port on the DB host that should be targeted
+   * @returns self for further chaining
+   */
   public async resolveRemotePort(): Promise<ForwardingParamsResolver> {
     if (this.mediator.rawArgs.port) {
       this.logger.debug('Using the DB port specified in the CLI parameters');
@@ -208,6 +234,10 @@ export class ForwardingParamsResolver {
     return this;
   }
 
+  /**
+   * Resolves the local port that should be listened to by the plugin
+   * @returns self for further chaining
+   */
   public async resolveLocalPort(): Promise<ForwardingParamsResolver> {
     if (this.mediator.rawArgs['local-port']) {
       this.logger.debug('Using the local port specified in the CLI parameters');
@@ -220,7 +250,7 @@ export class ForwardingParamsResolver {
     }
     if (!this.port) {
       throw new Error(
-        'Remote port is not defined. Did you run `resolveRemotePort()` first?'
+        'Remote port is not defined. Did you run `resolveRemotePort()` first?',
       );
     }
     if (

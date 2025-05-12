@@ -23,23 +23,23 @@ export type RawDescribeTasksInput = {
 };
 
 const isListTasks = (
-  input: PaginatedCommandInput
+  input: PaginatedCommandInput,
 ): input is ListTasksCommandInput => 'desiredStatus' in input;
 export const isDescribeTasks = (
-  input: PaginatedCommandInput | RawDescribeTasksInput
+  input: PaginatedCommandInput | RawDescribeTasksInput,
 ): input is RawDescribeTasksInput => 'taskArns' in input;
 const isListServices = (
-  input: PaginatedCommandInput
+  input: PaginatedCommandInput,
 ): input is ListServicesCommandInput =>
   'cluster' in input && !isDescribeTasks(input) && !isListTasks(input);
 const isListClusters = (
-  input: PaginatedCommandInput
+  input: PaginatedCommandInput,
 ): input is ListClustersCommandInput =>
   Object.keys(input).length === 1 && 'nextToken' in input;
 
 export const paginateClientCommand = async (
   client: ECSClient,
-  commandInput: PaginatedCommandInput
+  commandInput: PaginatedCommandInput,
 ) => {
   let nextToken: string | undefined = undefined;
   const allResults: string[] = [];
@@ -84,7 +84,7 @@ function* getBatch(arns: string[], size: number) {
 export const paginateDescribeTasksRequest = async (
   client: ECSClient,
   rawInput: RawDescribeTasksInput,
-  batchSize: number = DESCRIBE_TASKS_MAX_ARNS
+  batchSize: number = DESCRIBE_TASKS_MAX_ARNS,
 ) => {
   const { taskArns, clusterName } = rawInput;
   const tasks: Task[] = [];
@@ -99,8 +99,8 @@ export const paginateDescribeTasksRequest = async (
         `Failed to describe some tasks: ${JSON.stringify(
           response.failures,
           undefined,
-          2
-        )}`
+          2,
+        )}`,
       );
     }
     if (!response.tasks || response.tasks.length === 0) {

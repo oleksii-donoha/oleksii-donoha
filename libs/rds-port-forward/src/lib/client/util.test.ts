@@ -1,11 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
 import {
+  DescribeTasksCommand,
   ECSClient,
   ListClustersCommand,
   ListServicesCommand,
   ListTasksCommand,
-  DescribeTasksCommand,
 } from '@aws-sdk/client-ecs';
+import { describe, expect, it, vi } from 'vitest';
+
 import {
   paginateClientCommand,
   PaginatedCommandInput,
@@ -93,7 +94,7 @@ describe('clientUtil', () => {
       await expect(
         paginateClientCommand(mockClient, {
           unknownKey: 'value',
-        } as unknown as PaginatedCommandInput)
+        } as unknown as PaginatedCommandInput),
       ).rejects.toThrow('Unknown ECS client input type');
     });
   });
@@ -107,7 +108,7 @@ describe('clientUtil', () => {
       const result = await paginateDescribeTasksRequest(
         mockClient,
         { taskArns: ['task1', 'task2'], clusterName: 'cluster' },
-        1
+        1,
       );
 
       expect(result).toEqual([{ taskArn: 'task1' }, { taskArn: 'task2' }]);
@@ -131,7 +132,7 @@ describe('clientUtil', () => {
         paginateDescribeTasksRequest(mockClient, {
           taskArns: ['task1'],
           clusterName: 'cluster',
-        })
+        }),
       ).rejects.toThrow('Failed to describe some tasks:');
     });
 
@@ -142,7 +143,7 @@ describe('clientUtil', () => {
         paginateDescribeTasksRequest(mockClient, {
           taskArns: ['task1'],
           clusterName: 'cluster',
-        })
+        }),
       ).rejects.toThrow('No tasks were returned by AWS API');
     });
   });

@@ -1,7 +1,11 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+
 import { Mediator } from './mediator.js';
 
+/**
+ * CLI argument that can be skipped when running the command repeatedly
+ */
 type SkippableArg = {
   skippable: true;
   value: string | undefined;
@@ -14,6 +18,7 @@ type RequiredArg = {
 
 export type Arg = SkippableArg | RequiredArg;
 
+// used to narrow down the argv type to the options that we care about
 const argKeys = [
   'cluster',
   'service',
@@ -26,8 +31,11 @@ const argKeys = [
 
 export type ArgKey = (typeof argKeys)[number];
 
+/**
+ * Handles CLI interface and operations on arguments
+ */
 export class CliManager {
-  private mediator: Mediator;
+  protected mediator: Mediator;
 
   constructor(argv: typeof process.argv, mediator: Mediator) {
     this.mediator = mediator;
@@ -39,7 +47,8 @@ export class CliManager {
           type: 'string',
         },
         service: {
-          describe: 'Name (fuzzy) of the service that hosts target task',
+          describe:
+            'Name (fuzzy) of the service that hosts target task\nRecommended to use when dealing with big clusters with lots of tasks',
           type: 'string',
         },
         container: {
@@ -72,13 +81,19 @@ export class CliManager {
       .conflicts('db-host', 'db-host-from-container-env')
       .parseSync(hideBin(argv));
 
-    this.mediator.rawArgs = argKeys.reduce((acc, argKey) => {
-      acc[argKey] = parsedArgv[argKey];
-      return acc;
-    }, {} as Pick<typeof parsedArgv, ArgKey>);
+    this.mediator.rawArgs = argKeys.reduce(
+      (acc, argKey) => {
+        acc[argKey] = parsedArgv[argKey];
+        return acc;
+      },
+      {} as Pick<typeof parsedArgv, ArgKey>,
+    );
     this.mediator.verbose = parsedArgv.verbose ?? false;
   }
 
+  /**
+   * Returns the processed args committed to the mediator object by resolvers
+   */
   get equivalent() {
     if (
       !this.mediator.processedArgs ||
@@ -89,13 +104,18 @@ export class CliManager {
     return this.mediator.processedArgs;
   }
 
+  /**
+   * Formats CLI arguments that can be used for repeat invocations
+   * @param format 'full' or 'only-required'
+   * @returns formatted string
+   */
   public formatCliArgs(format: 'full' | 'only-required') {
     const args = Object.entries(this.equivalent).reduce((acc, [key, arg]) => {
       if (!arg.value || (format === 'only-required' && arg.skippable))
         return acc;
-      acc.push(`\t--${key} ${arg.value} \\\n`);
+      acc.push(`\t--${key} ${arg.value}`);
       return acc;
     }, [] as string[]);
-    return args.join(' ');
+    return args.join(' \\\n');
   }
 }

@@ -1,5 +1,6 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import { CliManager } from './cli.js';
-import { describe, it, expect, beforeEach } from 'vitest';
 import { Mediator } from './mediator.js';
 
 describe('CliManager', () => {
@@ -36,7 +37,7 @@ describe('CliManager', () => {
       const cliManager = new CliManager(argv, mediator);
 
       expect(() => cliManager.equivalent).toThrow(
-        'There is no collected argument data from resolvers'
+        'There is no collected argument data from resolvers',
       );
     });
 
