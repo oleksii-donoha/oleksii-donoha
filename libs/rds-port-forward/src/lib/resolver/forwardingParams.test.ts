@@ -5,7 +5,7 @@ import { Logger } from 'winston';
 
 import { paginate } from '../client/index.js';
 import { Mediator } from '../mediator.js';
-import { ForwardingParamsResolver } from './forwardingParams.js';
+import { ForwardingParamsResolver } from './index.js';
 
 vi.mock('../client/index.js', () => ({
   paginate: vi.fn(),

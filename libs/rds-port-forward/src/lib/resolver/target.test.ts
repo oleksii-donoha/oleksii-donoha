@@ -4,7 +4,7 @@ import { Logger } from 'winston';
 
 import { paginate } from '../client/index.js';
 import { mediator } from '../mediator.js';
-import { TargetResolver } from './target.js';
+import { TargetResolver } from './index.js';
 
 vi.mock('@inquirer/prompts', () => ({
   select: vi.fn(),

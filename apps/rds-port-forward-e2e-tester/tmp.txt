@@ -1,2 +1,0 @@
-aws ssm start-session --target ecs:rds-port-forward-e2e-tester-dev-rdsportforwarde2etesterclusterCluster-bbrkafre_5e4e2fb6ea3d4fb680954d9745fbd076_5e4e2fb6ea3d4fb680954d9745fbd076-2655896961 --document-name AWS-StartPortForwardingSessionToRemoteHost \                                                      
---parameters '{"host":["rds-port-forward-dev-rdsportforwarde2etesterdbinstance-vanbkzkt.cd4o4g4a60iw.eu-west-1.rds.amazonaws.com"],"portNumber":["5432"], "localPortNumber":["5432"]}'

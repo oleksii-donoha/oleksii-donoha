@@ -2,66 +2,6 @@
   "name": "@oleksii-donoha/rds-port-forward-e2e-tester",
   "version": "0.0.1",
   "private": true,
-  "nx": {
-    "targets": {
-      "build": {
-        "configurations": {
-          "development": {},
-          "production": {
-            "esbuildOptions": {
-              "outExtension": {
-                ".js": ".js"
-              },
-              "sourcemap": false
-            }
-          }
-        },
-        "defaultConfiguration": "production",
-        "executor": "@nx/esbuild:esbuild",
-        "options": {
-          "assets": [
-            "apps/rds-port-forward-e2e-tester/src/assets"
-          ],
-          "bundle": false,
-          "esbuildOptions": {
-            "outExtension": {
-              ".js": ".js"
-            },
-            "sourcemap": true
-          },
-          "format": [
-            "cjs"
-          ],
-          "main": "apps/rds-port-forward-e2e-tester/src/main.ts",
-          "outputPath": "apps/rds-port-forward-e2e-tester/dist",
-          "platform": "node",
-          "tsConfig": "apps/rds-port-forward-e2e-tester/tsconfig.app.json"
-        },
-        "outputs": [
-          "{options.outputPath}"
-        ]
-      },
-      "serve": {
-        "configurations": {
-          "development": {
-            "buildTarget": "@oleksii-donoha/rds-port-forward-e2e-tester:build:development"
-          },
-          "production": {
-            "buildTarget": "@oleksii-donoha/rds-port-forward-e2e-tester:build:production"
-          }
-        },
-        "defaultConfiguration": "development",
-        "dependsOn": [
-          "build"
-        ],
-        "executor": "@nx/js:node",
-        "options": {
-          "buildTarget": "@oleksii-donoha/rds-port-forward-e2e-tester:build",
-          "runBuildTargetDependencies": false
-        }
-      }
-    }
-  },
   "dependencies": {
     "sst": "3.13.19"
   },
