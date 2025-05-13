@@ -50,7 +50,15 @@
   ],
   "release": {
     "version": {
-      "preVersionCommand": "npx nx run-many -t build"
+      "preVersionCommand": "npx nx run-many -t build",
+      "conventionalCommits": true
+    },
+    "projectsRelationship": "independent",
+    "releaseTagPattern": "release/{projectName}/{version}",
+    "changelog": {
+      "projectChangelogs": {
+        "createRelease": "github"
+      }
     }
   },
   "targetDefaults": {
