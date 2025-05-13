@@ -1,4 +1,4 @@
-/* c8 ignore file */
+#!/usr/bin/env node
 import { ECSClient } from '@aws-sdk/client-ecs';
 import { createLogger, format, transports } from 'winston';
 
