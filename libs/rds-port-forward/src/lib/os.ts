@@ -2,6 +2,8 @@ import { execSync, spawn } from 'child_process';
 import process from 'process';
 import { Logger } from 'winston';
 
+import { Mediator } from './mediator.js';
+
 // Modify if docs or interface change
 const AWS_CLI_DOC_LINK =
   'https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html';
@@ -28,7 +30,8 @@ export const isExecutableInPath = (name: string): boolean => {
  */
 export class OsManager {
   protected logger: Logger;
-  constructor(logger: Logger) {
+  protected mediator: Mediator;
+  constructor(logger: Logger, mediator: Mediator) {
     if (!isExecutableInPath(COMMAND)) {
       throw new Error(
         `AWS CLI v2 executable was not found. Check out the documentation and install it first: ${AWS_CLI_DOC_LINK}`,
@@ -40,6 +43,7 @@ export class OsManager {
       );
     }
     this.logger = logger;
+    this.mediator = mediator;
   }
 
   /**
@@ -63,6 +67,12 @@ export class OsManager {
       '--document-name',
       DOCUMENT_NAME,
     ];
+    if (this.mediator.awsCli.profile) {
+      args.push('--profile', this.mediator.awsCli.profile);
+    }
+    if (this.mediator.awsCli.region) {
+      args.push('--region', this.mediator.awsCli.region);
+    }
 
     this.logger.debug(`Running the command: ${COMMAND} ${args.join(' ')}`);
 

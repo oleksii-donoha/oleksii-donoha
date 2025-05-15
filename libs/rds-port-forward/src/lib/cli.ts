@@ -39,7 +39,8 @@ export class CliManager {
 
   constructor(argv: typeof process.argv, mediator: Mediator) {
     this.mediator = mediator;
-    const parsedArgv = yargs()
+    const yargsInstance = yargs();
+    const parsedArgv = yargsInstance
       .scriptName('rds-port-forward')
       .options({
         cluster: {
@@ -87,6 +88,8 @@ export class CliManager {
         },
       })
       .conflicts('db-host', 'db-host-from-container-env')
+      .version(false)
+      .wrap(yargsInstance.terminalWidth())
       .parseSync(hideBin(argv));
 
     this.mediator.rawArgs = argKeys.reduce(

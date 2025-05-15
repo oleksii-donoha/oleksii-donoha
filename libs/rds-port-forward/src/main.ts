@@ -27,7 +27,7 @@ const main = async () => {
       ),
     }),
   });
-  const osManager = new OsManager(logger);
+  const osManager = new OsManager(logger, mediator);
   const { profile, region } = mediator.awsCli;
   logger.debug(
     `Using provided AWS CLI params: profile ${profile || '[inherited from environment]'}, region ${region || '[inherited from environment]'}`,

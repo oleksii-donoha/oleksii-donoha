@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Logger } from 'winston';
 
+import { Mediator } from './mediator.js';
 import { isExecutableInPath, OsManager } from './os.js';
 
 vi.mock('child_process', () => ({
@@ -16,8 +17,16 @@ const mockLogger = {
 } as unknown as Logger;
 
 describe('OsManager', () => {
+  let mediator: Mediator;
   beforeEach(() => {
     vi.clearAllMocks();
+    mediator = {
+      rawArgs: {},
+      processedArgs: {},
+      forwardingParams: {},
+      target: {},
+      awsCli: {},
+    } as unknown as Mediator;
   });
 
   describe('isExecutableInPath', () => {
@@ -41,7 +50,7 @@ describe('OsManager', () => {
       vi.mocked(execSync).mockImplementationOnce(() => {
         throw new Error('not found');
       });
-      expect(() => new OsManager(mockLogger)).toThrow(
+      expect(() => new OsManager(mockLogger, mediator)).toThrow(
         'AWS CLI v2 executable was not found. Check out the documentation and install it first: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html',
       );
     });
@@ -52,14 +61,14 @@ describe('OsManager', () => {
         .mockImplementationOnce(() => {
           throw new Error('not found');
         });
-      expect(() => new OsManager(mockLogger)).toThrow(
+      expect(() => new OsManager(mockLogger, mediator)).toThrow(
         'Session manager plugin executable was not found. Check out the documentation and install it first: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html',
       );
     });
 
     it('should create an instance if all executables are found', () => {
       vi.mocked(execSync).mockReturnValue('/usr/bin/aws');
-      const osManager = new OsManager(mockLogger);
+      const osManager = new OsManager(mockLogger, mediator);
       expect(osManager).toBeInstanceOf(OsManager);
     });
   });
@@ -71,7 +80,7 @@ describe('OsManager', () => {
 
     beforeEach(() => {
       vi.mocked(execSync).mockReturnValue('/usr/bin/aws');
-      osManager = new OsManager(mockLogger);
+      osManager = new OsManager(mockLogger, mediator);
       mockProcess = new EventEmitter() as unknown as NodeJS.Process;
       mockProcess.kill = vi.fn(() => true) as unknown as typeof process.kill;
     });
@@ -109,6 +118,46 @@ describe('OsManager', () => {
           `'${params}'`,
           '--document-name',
           'AWS-StartPortForwardingSessionToRemoteHost',
+        ],
+        { stdio: 'inherit', shell: true },
+      );
+    });
+
+    it('should pass profile and region args to the child process', async () => {
+      const mockChildProcess = {
+        on: vi.fn((event, callback) => {
+          if (event === 'exit') {
+            callback(0, null);
+          }
+        }),
+      } as unknown as ChildProcess;
+      mockSpawn.mockReturnValue(mockChildProcess);
+      mediator.awsCli = { region: 'fake-region', profile: 'fake-profile' };
+      osManager = new OsManager(mockLogger, mediator);
+
+      const target = 'fake-target';
+      const params = '{"portNumber":["3306"],"localPortNumber":["3306"]}';
+      const result = await osManager.runSession(target, params, mockProcess);
+
+      expect(result).toBe(0);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Running the command: aws ssm start-session --target ${target} --parameters '${params}' --document-name AWS-StartPortForwardingSessionToRemoteHost --profile fake-profile --region fake-region`,
+      );
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'aws',
+        [
+          'ssm',
+          'start-session',
+          '--target',
+          target,
+          '--parameters',
+          `'${params}'`,
+          '--document-name',
+          'AWS-StartPortForwardingSessionToRemoteHost',
+          '--profile',
+          'fake-profile',
+          '--region',
+          'fake-region',
         ],
         { stdio: 'inherit', shell: true },
       );

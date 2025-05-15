@@ -35,6 +35,7 @@ describe('ForwardingParamsResolver', () => {
       processedArgs: {},
       forwardingParams: {},
       target: {},
+      awsCli: {},
     } as unknown as Mediator;
     resolver = new ForwardingParamsResolver(ecsClient, logger, mediator);
   });
