@@ -1,6 +1,11 @@
 {
   "name": "@oleksii-donoha/rds-port-forward",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oleksii-donoha/oleksii-donoha",
+    "directory": "libs/rds-port-forward"
+  },
   "version": "0.0.1",
   "main": "./dist/main.js",
   "module": "./dist/main.js",

@@ -54,10 +54,11 @@
       "conventionalCommits": true
     },
     "projectsRelationship": "independent",
-    "releaseTagPattern": "release/{projectName}/{version}",
+    "releaseTagPattern": "release/{projectName}/v{version}",
     "changelog": {
       "projectChangelogs": {
-        "createRelease": "github"
+        "createRelease": "github",
+        "file": false
       }
     }
   },
