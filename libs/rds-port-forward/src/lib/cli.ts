@@ -77,6 +77,14 @@ export class CliManager {
           describe: 'Prints more logs for debugging',
           type: 'boolean',
         },
+        profile: {
+          describe: 'AWS CLI profile to use',
+          type: 'string',
+        },
+        region: {
+          describe: 'AWS region for the request',
+          type: 'string',
+        },
       })
       .conflicts('db-host', 'db-host-from-container-env')
       .parseSync(hideBin(argv));
@@ -89,6 +97,10 @@ export class CliManager {
       {} as Pick<typeof parsedArgv, ArgKey>,
     );
     this.mediator.verbose = parsedArgv.verbose ?? false;
+    this.mediator.awsCli = {
+      region: parsedArgv.region,
+      profile: parsedArgv.profile,
+    };
   }
 
   /**

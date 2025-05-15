@@ -28,7 +28,14 @@ const main = async () => {
     }),
   });
   const osManager = new OsManager(logger);
-  const client = new ECSClient({});
+  const { profile, region } = mediator.awsCli;
+  logger.debug(
+    `Using provided AWS CLI params: profile ${profile || '[inherited from environment]'}, region ${region || '[inherited from environment]'}`,
+  );
+  const client = new ECSClient({
+    region: mediator.awsCli.region,
+    profile: mediator.awsCli.region,
+  });
   const targetResolver = new TargetResolver(client, logger, mediator);
   let target: string;
   let params: string;

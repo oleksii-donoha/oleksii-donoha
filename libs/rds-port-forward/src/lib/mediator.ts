@@ -26,6 +26,10 @@ export type Mediator = {
    * Sets logger level to `debug` when set
    */
   verbose: boolean;
+  awsCli: {
+    profile: string | undefined;
+    region: string | undefined;
+  };
 };
 
 export const mediator: Mediator = {
@@ -38,4 +42,8 @@ export const mediator: Mediator = {
     clusterName: undefined,
   },
   verbose: false,
+  awsCli: {
+    profile: undefined,
+    region: undefined,
+  },
 };
