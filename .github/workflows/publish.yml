@@ -3,7 +3,7 @@ name: Publish
 on:
   push:
     tags:
-      - release/*
+      - release/**
   workflow_dispatch:
 
 jobs:
@@ -29,6 +29,10 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        shell: bash
+
+      - name: Build dist
+        run: npx nx run rds-port-forward:build --verbose
         shell: bash
 
       - name: Publish packages
