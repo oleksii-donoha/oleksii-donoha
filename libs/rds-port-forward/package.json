@@ -6,11 +6,27 @@
     "url": "git+https://github.com/oleksii-donoha/oleksii-donoha",
     "directory": "libs/rds-port-forward"
   },
+  "keywords": [
+    "aws",
+    "rds",
+    "ecs",
+    "port forwarding"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
   "version": "1.0.0",
   "main": "./dist/main.js",
   "module": "./dist/main.js",
   "types": "./dist/main.d.ts",
-  "bin": "./dist/main.js",
+  "bin": {
+    "rds-port-forward": "./dist/main.js"
+  },
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -31,8 +47,5 @@
     "@inquirer/prompts": "^7.5.0",
     "fuse.js": "^7.1.0",
     "yargs": "^17.7.2"
-  },
-  "devDependencies": {
-    "@nx/vite": "^20.8.1"
   }
 }
