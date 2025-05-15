@@ -67,11 +67,10 @@ export class OsManager {
       '--document-name',
       DOCUMENT_NAME,
     ];
-    if (this.mediator.awsCli.profile) {
-      args.push('--profile', this.mediator.awsCli.profile);
-    }
-    if (this.mediator.awsCli.region) {
-      args.push('--region', this.mediator.awsCli.region);
+    for (const arg of ['profile', 'region'] as const) {
+      if (this.mediator.rawArgs[arg]) {
+        args.push(`--${arg}`, this.mediator.rawArgs[arg]);
+      }
     }
 
     this.logger.debug(`Running the command: ${COMMAND} ${args.join(' ')}`);

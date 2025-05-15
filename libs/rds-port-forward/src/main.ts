@@ -28,13 +28,13 @@ const main = async () => {
     }),
   });
   const osManager = new OsManager(logger, mediator);
-  const { profile, region } = mediator.awsCli;
+  const { profile, region } = mediator.rawArgs;
   logger.debug(
-    `Using provided AWS CLI params: profile ${profile || '[inherited from environment]'}, region ${region || '[inherited from environment]'}`,
+    `Using provided AWS credentials' params: profile ${profile || '[inherited from environment]'}, region ${region || '[inherited from environment]'}`,
   );
   const client = new ECSClient({
-    region: mediator.awsCli.region,
-    profile: mediator.awsCli.region,
+    region,
+    profile,
   });
   const targetResolver = new TargetResolver(client, logger, mediator);
   let target: string;
@@ -65,10 +65,10 @@ const main = async () => {
   }
   const message = [
     'You can start an identical session next time by running:',
-    `\x1b[32m[Required args only]\x1b[0m npx @oleksii-donoha/rds-port-forward -y \\\n ${cli.formatCliArgs(
+    `\x1b[32m[Required args only]\x1b[0m\nnpx -y @oleksii-donoha/rds-port-forward \\\n ${cli.formatCliArgs(
       'only-required',
     )}`,
-    `\x1b[34m[Full command]\x1b[0m npx @oleksii-donoha/rds-port-forward -y \\\n ${cli.formatCliArgs(
+    `\x1b[34m[Full command]\x1b[0m\nnpx -y @oleksii-donoha/rds-port-forward \\\n ${cli.formatCliArgs(
       'full',
     )}`,
   ];

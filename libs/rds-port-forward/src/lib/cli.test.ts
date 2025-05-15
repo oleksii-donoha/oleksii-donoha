@@ -18,7 +18,16 @@ describe('CliManager', () => {
 
   describe('constructor', () => {
     it('should parse CLI arguments and initialize incoming args', () => {
-      argv = ['node', 'script.js', '--cluster', 'test-cluster'];
+      argv = [
+        'node',
+        'script.js',
+        '--cluster',
+        'test-cluster',
+        '--region',
+        'fake',
+        '--profile',
+        'fake',
+      ];
       new CliManager(argv, mediator);
 
       expect(mediator.rawArgs).toEqual({
@@ -27,6 +36,8 @@ describe('CliManager', () => {
         container: undefined,
         'db-host': undefined,
         'db-host-from-container-env': undefined,
+        profile: 'fake',
+        region: 'fake',
       });
     });
   });

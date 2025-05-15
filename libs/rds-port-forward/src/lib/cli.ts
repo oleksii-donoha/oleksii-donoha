@@ -27,6 +27,8 @@ const argKeys = [
   'db-host-from-container-env',
   'port',
   'local-port',
+  'profile',
+  'region',
 ] as const;
 
 export type ArgKey = (typeof argKeys)[number];
@@ -100,10 +102,14 @@ export class CliManager {
       {} as Pick<typeof parsedArgv, ArgKey>,
     );
     this.mediator.verbose = parsedArgv.verbose ?? false;
-    this.mediator.awsCli = {
-      region: parsedArgv.region,
-      profile: parsedArgv.profile,
-    };
+    for (const arg of ['profile', 'region'] as const) {
+      if (parsedArgv[arg]) {
+        this.mediator.processedArgs[arg] = {
+          skippable: false,
+          value: parsedArgv[arg],
+        };
+      }
+    }
   }
 
   /**

@@ -25,7 +25,6 @@ describe('OsManager', () => {
       processedArgs: {},
       forwardingParams: {},
       target: {},
-      awsCli: {},
     } as unknown as Mediator;
   });
 
@@ -132,7 +131,7 @@ describe('OsManager', () => {
         }),
       } as unknown as ChildProcess;
       mockSpawn.mockReturnValue(mockChildProcess);
-      mediator.awsCli = { region: 'fake-region', profile: 'fake-profile' };
+      mediator.rawArgs = { region: 'fake-region', profile: 'fake-profile' };
       osManager = new OsManager(mockLogger, mediator);
 
       const target = 'fake-target';
