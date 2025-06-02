@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { CliManager } from './cli.js';
-import { Mediator } from './mediator.js';
+import { Mediator } from '../mediator.js';
+import { CliManager } from './index.js';
 
 describe('CliManager', () => {
   let argv: string[];

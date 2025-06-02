@@ -1,7 +1,16 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { Mediator } from './mediator.js';
+import { Mediator } from '../mediator.js';
+import {
+  ArgKey,
+  argKeys,
+  awsCliSpecificOptions,
+  cliOptions,
+  conflictingCliOptions,
+  NO_RESOLVER_DATA,
+  scriptName,
+} from './uiText.js';
 
 /**
  * CLI argument that can be skipped when running the command repeatedly
@@ -19,19 +28,6 @@ type RequiredArg = {
 export type Arg = SkippableArg | RequiredArg;
 
 // used to narrow down the argv type to the options that we care about
-const argKeys = [
-  'cluster',
-  'service',
-  'container',
-  'db-host',
-  'db-host-from-container-env',
-  'port',
-  'local-port',
-  'profile',
-  'region',
-] as const;
-
-export type ArgKey = (typeof argKeys)[number];
 
 /**
  * Handles CLI interface and operations on arguments
@@ -43,53 +39,9 @@ export class CliManager {
     this.mediator = mediator;
     const yargsInstance = yargs();
     const parsedArgv = yargsInstance
-      .scriptName('rds-port-forward')
-      .options({
-        cluster: {
-          describe: 'Name of the ECS cluster where target resides',
-          type: 'string',
-        },
-        service: {
-          describe:
-            'Name (fuzzy) of the service that hosts target task\nRecommended to use when dealing with big clusters with lots of tasks',
-          type: 'string',
-        },
-        container: {
-          describe:
-            'Name (fuzzy) of the container that will be used to forward the port',
-          type: 'string',
-        },
-        'db-host': {
-          describe:
-            'Hostname (or IP address) of the DB instance to which the local port will be forwarded',
-          type: 'string',
-        },
-        'db-host-from-container-env': {
-          describe: `Target container's environment variable whose value points to the DB hostname (or IP)`,
-          type: 'string',
-        },
-        port: {
-          describe: 'Remote port to forward traffic to',
-          type: 'string',
-        },
-        'local-port': {
-          describe: 'Port on your machine that will listen to requests',
-          type: 'string',
-        },
-        verbose: {
-          describe: 'Prints more logs for debugging',
-          type: 'boolean',
-        },
-        profile: {
-          describe: 'AWS CLI profile to use',
-          type: 'string',
-        },
-        region: {
-          describe: 'AWS region for the request',
-          type: 'string',
-        },
-      })
-      .conflicts('db-host', 'db-host-from-container-env')
+      .scriptName(scriptName)
+      .options(cliOptions)
+      .conflicts(...conflictingCliOptions)
       .version(false)
       .wrap(yargsInstance.terminalWidth())
       .parseSync(hideBin(argv));
@@ -102,7 +54,7 @@ export class CliManager {
       {} as Pick<typeof parsedArgv, ArgKey>,
     );
     this.mediator.verbose = parsedArgv.verbose ?? false;
-    for (const arg of ['profile', 'region'] as const) {
+    for (const arg of awsCliSpecificOptions) {
       if (parsedArgv[arg]) {
         this.mediator.processedArgs[arg] = {
           skippable: false,
@@ -120,7 +72,7 @@ export class CliManager {
       !this.mediator.processedArgs ||
       Object.keys(this.mediator.processedArgs).length === 0
     ) {
-      throw new Error('There is no collected argument data from resolvers');
+      throw new Error(NO_RESOLVER_DATA);
     }
     return this.mediator.processedArgs;
   }

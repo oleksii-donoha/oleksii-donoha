@@ -1,4 +1,4 @@
-import { Arg, ArgKey } from './cli.js';
+import { Arg, ArgKey } from './cli/index.js';
 
 /**
  * Sort-of Mediator pattern

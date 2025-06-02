@@ -2,7 +2,7 @@
 import { ECSClient } from '@aws-sdk/client-ecs';
 import { createLogger, format, transports } from 'winston';
 
-import { CliManager } from './lib/cli.js';
+import { CliManager } from './lib/cli/index.js';
 import { mediator } from './lib/mediator.js';
 import { OsManager } from './lib/os/index.js';
 import {
