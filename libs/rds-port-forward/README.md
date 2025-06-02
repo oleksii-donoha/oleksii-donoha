@@ -2,8 +2,6 @@
 
 A streamlined way to forward AWS RDS ports locally for ECS-based applications.
 
-Start by running: `npx -y @oleksii-donoha/rds-port-forward`
-
 ![demo.webp](./demo.webp)
 
 ## What problem does it solve?
