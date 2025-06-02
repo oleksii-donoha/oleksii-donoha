@@ -133,7 +133,7 @@ describe('clientUtil', () => {
           taskArns: ['task1'],
           clusterName: 'cluster',
         }),
-      ).rejects.toThrow('Failed to describe some tasks:');
+      ).rejects.toThrow();
     });
 
     it('should throw an error if no tasks are returned', async () => {

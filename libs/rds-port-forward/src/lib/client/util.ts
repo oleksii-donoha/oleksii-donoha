@@ -10,6 +10,8 @@ import {
   Task,
 } from '@aws-sdk/client-ecs';
 
+import { utilText } from './uiText.js';
+
 const DESCRIBE_TASKS_MAX_ARNS = 100;
 
 export type PaginatedCommandInput =
@@ -68,7 +70,7 @@ export const paginateClientCommand = async (
       }
       nextToken = response.nextToken;
     } else {
-      throw new Error('Unknown ECS client input type');
+      throw new Error(utilText.UNKNOWN_INPUT);
     }
   } while (nextToken);
   return allResults;
@@ -96,15 +98,13 @@ export const paginateDescribeTasksRequest = async (
     const response = await client.send(command);
     if (response.failures && response.failures.length > 0) {
       throw new Error(
-        `Failed to describe some tasks: ${JSON.stringify(
-          response.failures,
-          undefined,
-          2,
-        )}`,
+        utilText.DESCRIBE_TASKS_FAIL +
+          ':\n' +
+          JSON.stringify(response.failures, undefined, 2),
       );
     }
     if (!response.tasks || response.tasks.length === 0) {
-      throw new Error('No tasks were returned by AWS API');
+      throw new Error(utilText.NO_TASKS);
     }
     tasks.push(...response.tasks);
   }
