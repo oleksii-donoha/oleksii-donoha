@@ -20,7 +20,7 @@
     "darwin",
     "linux"
   ],
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "./dist/main.js",
   "module": "./dist/main.js",
   "types": "./dist/main.d.ts",
