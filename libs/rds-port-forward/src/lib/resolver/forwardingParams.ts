@@ -5,6 +5,7 @@ import { Logger } from 'winston';
 
 import { paginate } from '../client/index.js';
 import { Mediator } from '../mediator.js';
+import { dbPortChoiceMap, forwarderText } from './uiText.js';
 
 /**
  * Forwarding params JSON expected by the SSM plugin
@@ -40,19 +41,13 @@ export class ForwardingParamsResolver {
    */
   get forwardingParams() {
     if (!this.dbHost) {
-      throw new Error(
-        'DB host is not set. Did you run `resolveDbHost()` first?',
-      );
+      throw new Error(forwarderText.DB_HOST_NOT_SET);
     }
     if (!this.port) {
-      throw new Error(
-        'DB port is not set. Did you run `resolveRemotePort()` first?',
-      );
+      throw new Error(forwarderText.DB_PORT_NOT_SET);
     }
     if (!this.localPort) {
-      throw new Error(
-        'Local port is not set. Did you run `resolveLocalPort()` first?',
-      );
+      throw new Error(forwarderText.LOCAL_PORT_NOT_SET);
     }
     return JSON.stringify({
       host: [this.dbHost],
@@ -64,19 +59,13 @@ export class ForwardingParamsResolver {
   protected async getContainerEnv(): Promise<{ [x: string]: string }> {
     const { target } = this.mediator;
     if (!target.clusterName) {
-      throw new Error(
-        'Cluster name was not resolved prior to resolving the DB host through container ENV',
-      );
+      throw new Error(forwarderText.CLUSTER_NOT_RESOLVED);
     }
     if (!target.containerName) {
-      throw new Error(
-        'Container name was not resolved prior to resolving the DB host through container ENV',
-      );
+      throw new Error(forwarderText.CONTAINER_NOT_RESOLVED);
     }
     if (!target.taskDefinition || !target.taskId) {
-      throw new Error(
-        'Task definition or ID were not resolved prior to resolving the DB host through container ENV',
-      );
+      throw new Error(forwarderText.TASKDEF_NOT_RESOLVED);
     }
     const command = new DescribeTaskDefinitionCommand({
       taskDefinition: target.taskDefinition,
@@ -133,9 +122,7 @@ export class ForwardingParamsResolver {
       const varToLookup = rawArgs['db-host-from-container-env'];
       const containerEnv = await this.getContainerEnv();
       if (!containerEnv[varToLookup]) {
-        throw new Error(
-          `Container ENV (and ENV overrides) doesn't have an ENV variable with the name '${varToLookup}'`,
-        );
+        throw new Error(forwarderText.ENV_VAR_MISSING);
       }
       this.dbHost = containerEnv[varToLookup];
       this.mediator.processedArgs['db-host'] = {
@@ -145,21 +132,20 @@ export class ForwardingParamsResolver {
       return this;
     }
     const proceedWithEnv = await confirm({
-      message:
-        '🤔 No DB host for forwarding was supplied. Should we try to look it up in the container ENV?',
+      message: forwarderText.DB_HOST_LOOKUP,
     });
     if (proceedWithEnv) {
       const containerEnv = await this.getContainerEnv();
       if (Object.keys(containerEnv).length === 0) {
-        this.logger.info(`😿 The target container doesn't have ENV defined`);
+        this.logger.info(forwarderText.ENV_NOT_DEFINED);
       } else {
         const sortedEnv = new Fuse(Object.keys(containerEnv), {
           threshold: 1,
           shouldSort: true,
           isCaseSensitive: false,
-        }).search('HOST');
+        }).search('HOST'); // Look for ENV vars with 'HOST' in them and display them on top
         this.dbHost = await select({
-          message: '🌐 Select ENV variable to use as DB host',
+          message: forwarderText.ENV_VAR_SELECTION,
           choices: sortedEnv.map(({ item }) => ({
             value: containerEnv[item],
             description: `${item}: ${containerEnv[item]}`,
@@ -170,12 +156,12 @@ export class ForwardingParamsResolver {
           value: this.dbHost,
           skippable: false,
         };
-        this.logger.debug('Resolved DB host to', this.dbHost);
+        this.logger.debug(`Resolved DB host to ${this.dbHost}`);
         return this;
       }
     }
     this.dbHost = await input({
-      message: `✍️ Type in or paste the DB host address`,
+      message: forwarderText.DB_HOST_INPUT_PROMPT,
       required: true,
     });
     this.mediator.processedArgs['db-host'] = {
@@ -197,28 +183,16 @@ export class ForwardingParamsResolver {
       return this;
     }
     const answer = await select({
-      message: '📇 Select a target port of your DB host',
+      message: forwarderText.PORT_SELECTION_PROMPT,
       choices: [
-        {
-          value: '3306',
-          name: 'MySQL (3306)',
-        },
-        {
-          value: '5432',
-          name: 'PostgreSQL (5432)',
-        },
-        {
-          value: '27017',
-          name: 'MongoDB (27017)',
-        },
-        {
-          value: '5439',
-          name: 'Redshift (5439)',
-        },
+        ...Object.entries(dbPortChoiceMap).map(([port, dbDisplayName]) => ({
+          value: port,
+          name: `${dbDisplayName} (${port})`,
+        })),
         new Separator(),
         {
           value: 'custom',
-          name: 'Other (type in)',
+          name: forwarderText.PORT_INPUT_PROMPT,
         },
       ],
     });
@@ -228,7 +202,7 @@ export class ForwardingParamsResolver {
       return this;
     }
     this.port = `${await number({
-      message: '✍️ Type in or paste the DB port',
+      message: forwarderText.PORT_INPUT_PROMPT,
     })}`;
     this.mediator.processedArgs.port = { value: this.port, skippable: false };
     return this;
@@ -249,13 +223,11 @@ export class ForwardingParamsResolver {
       return this;
     }
     if (!this.port) {
-      throw new Error(
-        'Remote port is not defined. Did you run `resolveRemotePort()` first?',
-      );
+      throw new Error(forwarderText.DB_PORT_NOT_SET);
     }
     if (
       await confirm({
-        message: `🤔 Use the same local port (${this.port}) as the DB port?`,
+        message: forwarderText.USE_SAME_PORT_PROMPT,
       })
     ) {
       this.localPort = this.port;
@@ -266,7 +238,7 @@ export class ForwardingParamsResolver {
       return this;
     }
     this.localPort = `${await number({
-      message: '✍️ Type in or paste the local port',
+      message: forwarderText.LOCAL_PORT_INPUT_PROMPT,
     })}`;
     this.mediator.processedArgs['local-port'] = {
       value: this.localPort,

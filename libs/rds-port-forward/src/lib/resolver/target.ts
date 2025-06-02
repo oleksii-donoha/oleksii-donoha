@@ -6,6 +6,7 @@ import { type Logger } from 'winston';
 import { paginate } from '../client/index.js';
 import { type RawDescribeTasksInput } from '../client/util.js';
 import { type Mediator } from '../mediator.js';
+import { targetText } from './uiText.js';
 
 /**
  * Resolves the ECS target that needs to be passed to the SSM session plugin
@@ -31,15 +32,13 @@ export class TargetResolver {
 
   protected failIfClusterNameIsNotSet() {
     if (!this.clusterName) {
-      throw new Error(
-        'Cluster name is not set. Did you run `resolveCluster()` first?',
-      );
+      throw new Error(targetText.CLUSTER_NOT_RESOLVED);
     }
   }
 
   protected failIfTaskIdIsNotSet() {
     if (!this.taskId) {
-      throw new Error('Task ID is not set. Did you run `resolveTask()` first?');
+      throw new Error(targetText.TASK_ID_NOT_RESOLVED);
     }
   }
 
@@ -50,7 +49,7 @@ export class TargetResolver {
     this.failIfClusterNameIsNotSet();
     this.failIfTaskIdIsNotSet();
     if (!this.containerRuntimeId) {
-      throw new Error('Target container runtime ID was not resolved');
+      throw new Error(targetText.CONTAINER_NOT_RESOLVED);
     }
     return `ecs:${this.clusterName}_${this.taskId}_${this.containerRuntimeId}`;
   }
@@ -62,7 +61,7 @@ export class TargetResolver {
   async resolveCluster(): Promise<TargetResolver> {
     const allClusterArns = await paginate(this.ecsClient, {});
     if (allClusterArns.length === 0) {
-      throw new Error('No ECS clusters found');
+      throw new Error(targetText.NO_CLUSTERS);
     }
     const clusterNames = allClusterArns.map((arn) => arn.split('/')[1]);
     if (clusterNames.length === 1) {
@@ -79,7 +78,7 @@ export class TargetResolver {
     }
     this.logger.debug(`Found clusters: ${clusterNames}`);
     this.clusterName = await select({
-      message: '🌍 Select the target ECS cluster',
+      message: targetText.SELECT_CLUSTER_PROMPT,
       choices: clusterNames.map((value) => ({ value })),
     });
     this.mediator.processedArgs.cluster = {
@@ -115,7 +114,7 @@ export class TargetResolver {
       })
     ).map((arn) => arn.split('/').pop());
     if (serviceNames.length === 0) {
-      throw new Error('No services found in the cluster');
+      throw new Error(targetText.NO_SERVICES);
     }
     const exactMatch = serviceNames.find((name) => name === serviceNameLike);
     if (exactMatch) {
@@ -134,17 +133,17 @@ export class TargetResolver {
       .search(serviceNameLike)
       .map((match) => match.item);
     if (potentialServices.length === 0) {
-      throw new Error(
-        `No services matching or similar to '${serviceNameLike}' were found`,
-      );
+      throw new Error(targetText.SERVICE_NOT_MATCHED);
     }
     if (potentialServices.length === 1) {
       if (
         !(await confirm({
-          message: `❔ Found a similarly named service '${potentialServices[0]}', is it OK to use it?`,
+          message:
+            targetText.CONFIRM_FUZZY_SERVICE +
+            ` (service: ${potentialServices[0]})`,
         }))
       ) {
-        throw new Error('Cannot use the only potential matching service');
+        throw new Error(targetText.FUZZY_SERVICE_NOT_CONFIRMED);
       }
       this.serviceName = potentialServices[0];
       this.mediator.processedArgs.service = {
@@ -154,8 +153,7 @@ export class TargetResolver {
       return this;
     }
     this.serviceName = await select({
-      message:
-        '🤔 Multiple similarly named services found, select the one to use',
+      message: targetText.MULTIPLE_FUZZY_SERVICES_FOUND_PROMPT,
       choices: potentialServices.map((s) => {
         return { value: s };
       }),
@@ -181,9 +179,7 @@ export class TargetResolver {
     });
 
     if (allTaskArns.length === 0) {
-      throw new Error(
-        'No running tasks matching the input parameters were found',
-      );
+      throw new Error(targetText.NO_TASKS);
     }
 
     const detailedTasks = await paginate(this.ecsClient, {
@@ -207,7 +203,7 @@ export class TargetResolver {
     }
 
     const { taskId, taskDefinition } = await select({
-      message: '🤔 Select a matching task',
+      message: targetText.SELECT_TASK_PROMPT,
       choices: detailedTasks.map((task) => {
         const def = task.taskDefinitionArn?.split('/').pop();
         return {
@@ -244,13 +240,11 @@ export class TargetResolver {
       clusterName: this.clusterName,
     } as RawDescribeTasksInput);
     if (taskDetails.length === 0) {
-      throw new Error(
-        `Task with ID '${this.taskId}' was not found. Did it get evicted in the meantime?`,
-      );
+      throw new Error(targetText.TASK_NOT_FOUND);
     }
     const task = taskDetails[0];
     if (!task.containers || task.containers.length === 0) {
-      throw new Error(`No containers found inside the task ${this.taskId}`);
+      throw new Error(targetText.NO_CONTAINERS_IN_TASK);
     }
     if (task.containers.length === 1) {
       this.logger.debug('Task has a single container, using it as target');
@@ -263,7 +257,7 @@ export class TargetResolver {
       return this;
     }
     const { runtimeId, name } = await select({
-      message: '🤔 Select the container that will be used for port forwarding',
+      message: targetText.SELECT_CONTAINER_PROMPT,
       choices: task.containers.map((c) => {
         return {
           value: { runtimeId: c.runtimeId, name: c.name },

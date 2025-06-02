@@ -6,6 +6,7 @@ import { Logger } from 'winston';
 import { paginate } from '../client/index.js';
 import { Mediator } from '../mediator.js';
 import { ForwardingParamsResolver } from './index.js';
+import { forwarderText } from './uiText.js';
 
 vi.mock('../client/index.js', () => ({
   paginate: vi.fn(),
@@ -65,7 +66,7 @@ describe('ForwardingParamsResolver', () => {
       resolver['localPort'] = '5432';
 
       expect(() => resolver.forwardingParams).toThrow(
-        'DB host is not set. Did you run `resolveDbHost()` first?',
+        forwarderText.DB_HOST_NOT_SET,
       );
     });
 
@@ -74,7 +75,7 @@ describe('ForwardingParamsResolver', () => {
       resolver['localPort'] = '5432';
 
       expect(() => resolver.forwardingParams).toThrow(
-        'DB port is not set. Did you run `resolveRemotePort()` first?',
+        forwarderText.DB_PORT_NOT_SET,
       );
     });
 
@@ -83,7 +84,7 @@ describe('ForwardingParamsResolver', () => {
       resolver['port'] = '5432';
 
       expect(() => resolver.forwardingParams).toThrow(
-        'Local port is not set. Did you run `resolveLocalPort()` first?',
+        forwarderText.LOCAL_PORT_NOT_SET,
       );
     });
   });
@@ -166,7 +167,7 @@ describe('ForwardingParamsResolver', () => {
       ] as Task[]);
 
       await expect(resolver.resolveDbHost()).rejects.toThrow(
-        "Container ENV (and ENV overrides) doesn't have an ENV variable with the name 'DB_HOST'",
+        forwarderText.ENV_VAR_MISSING,
       );
     });
 
@@ -212,7 +213,7 @@ describe('ForwardingParamsResolver', () => {
 
       expect(resolver['dbHost']).toBe('localhost');
       expect(select).toHaveBeenCalledWith({
-        message: '🌐 Select ENV variable to use as DB host',
+        message: forwarderText.ENV_VAR_SELECTION,
         choices: [
           {
             value: 'localhost',
@@ -256,9 +257,7 @@ describe('ForwardingParamsResolver', () => {
 
       await resolver.resolveDbHost();
 
-      expect(logger.info).toHaveBeenCalledWith(
-        `😿 The target container doesn't have ENV defined`,
-      );
+      expect(logger.info).toHaveBeenCalledWith(forwarderText.ENV_NOT_DEFINED);
     });
 
     it('should throw an error if cluster name is missing', async () => {
@@ -270,7 +269,7 @@ describe('ForwardingParamsResolver', () => {
       };
       vi.mocked(confirm).mockResolvedValueOnce(true);
       await expect(resolver.resolveDbHost()).rejects.toThrow(
-        'Cluster name was not resolved prior to resolving the DB host through container ENV',
+        forwarderText.CLUSTER_NOT_RESOLVED,
       );
     });
 
@@ -283,7 +282,7 @@ describe('ForwardingParamsResolver', () => {
       };
       vi.mocked(confirm).mockResolvedValueOnce(true);
       await expect(resolver.resolveDbHost()).rejects.toThrow(
-        'Container name was not resolved prior to resolving the DB host through container ENV',
+        forwarderText.CONTAINER_NOT_RESOLVED,
       );
     });
 
@@ -296,7 +295,7 @@ describe('ForwardingParamsResolver', () => {
       };
       vi.mocked(confirm).mockResolvedValueOnce(true);
       await expect(resolver.resolveDbHost()).rejects.toThrow(
-        'Task definition or ID were not resolved prior to resolving the DB host through container ENV',
+        forwarderText.TASKDEF_NOT_RESOLVED,
       );
     });
 
@@ -414,7 +413,7 @@ describe('ForwardingParamsResolver', () => {
     resolver['port'] = undefined;
 
     await expect(resolver.resolveLocalPort()).rejects.toThrow(
-      'Remote port is not defined. Did you run `resolveRemotePort()` first?',
+      forwarderText.DB_PORT_NOT_SET,
     );
   });
 });
