@@ -2,13 +2,9 @@ import { execSync, spawn } from 'child_process';
 import process from 'process';
 import { Logger } from 'winston';
 
-import { Mediator } from './mediator.js';
+import { Mediator } from '../mediator.js';
+import { osText } from './uiText.js';
 
-// Modify if docs or interface change
-const AWS_CLI_DOC_LINK =
-  'https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html';
-const SSM_PLUGIN_DOC_LINK =
-  'https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html';
 const DOCUMENT_NAME = 'AWS-StartPortForwardingSessionToRemoteHost';
 const COMMAND = 'aws' as const;
 const SSM_SUBCOMMAND = ['ssm', 'start-session'] as const;
@@ -33,14 +29,10 @@ export class OsManager {
   protected mediator: Mediator;
   constructor(logger: Logger, mediator: Mediator) {
     if (!isExecutableInPath(COMMAND)) {
-      throw new Error(
-        `AWS CLI v2 executable was not found. Check out the documentation and install it first: ${AWS_CLI_DOC_LINK}`,
-      );
+      throw new Error(osText.AWS_CLI_MISSING);
     }
     if (!isExecutableInPath(SSM_PLUGIN_EXECUTABLE)) {
-      throw new Error(
-        `Session manager plugin executable was not found. Check out the documentation and install it first: ${SSM_PLUGIN_DOC_LINK}`,
-      );
+      throw new Error(osText.SSM_PLUGIN_MISSING);
     }
     this.logger = logger;
     this.mediator = mediator;
@@ -93,11 +85,9 @@ export class OsManager {
     return new Promise<number | null>((resolve) => {
       childProcess.on('exit', (code, signal) => {
         if (signal) {
-          this.logger.info(
-            `Child process terminated due to receipt of signal ${signal}`,
-          );
+          this.logger.info(osText.CHILD_TERMINATED + ` (${signal})`);
         } else {
-          this.logger.info(`Child process exited with code ${code}`);
+          this.logger.info(osText.CHILD_EXITED + ` (code ${code})`);
         }
         resolve(code);
       });

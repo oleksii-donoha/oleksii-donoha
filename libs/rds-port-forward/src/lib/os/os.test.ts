@@ -3,8 +3,9 @@ import { EventEmitter } from 'events';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Logger } from 'winston';
 
-import { Mediator } from './mediator.js';
-import { isExecutableInPath, OsManager } from './os.js';
+import { Mediator } from '../mediator.js';
+import { isExecutableInPath, OsManager } from './index.js';
+import { osText } from './uiText.js';
 
 vi.mock('child_process', () => ({
   execSync: vi.fn(),
@@ -208,7 +209,7 @@ describe('OsManager', () => {
 
       expect(result).toBe(1);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Child process exited with code 1',
+        expect.stringContaining(osText.CHILD_EXITED),
       );
     });
 
@@ -228,7 +229,7 @@ describe('OsManager', () => {
 
       expect(result).toBeNull();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Child process terminated due to receipt of signal SIGTERM',
+        expect.stringContaining(osText.CHILD_TERMINATED),
       );
     });
   });

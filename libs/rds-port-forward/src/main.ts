@@ -4,7 +4,7 @@ import { createLogger, format, transports } from 'winston';
 
 import { CliManager } from './lib/cli.js';
 import { mediator } from './lib/mediator.js';
-import { OsManager } from './lib/os.js';
+import { OsManager } from './lib/os/index.js';
 import {
   ForwardingParamsResolver,
   TargetResolver,
