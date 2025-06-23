@@ -42,7 +42,8 @@
   },
   "workspaces": [
     "libs/rds-port-forward",
-    "apps/*"
+    "apps/*",
+    "libs/kaban"
   ],
   "dependencies": {
     "@aws-sdk/client-ecs": "^3.799.0",

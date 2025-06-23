@@ -1,0 +1,66 @@
+{
+  "name": "@oleksii-donoha/kaban-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "defaultConfiguration": "production",
+        "options": {
+          "platform": "node",
+          "outputPath": "apps/kaban-e2e/dist",
+          "format": [
+            "cjs"
+          ],
+          "bundle": false,
+          "main": "apps/kaban-e2e/src/main.ts",
+          "tsConfig": "apps/kaban-e2e/tsconfig.app.json",
+          "assets": [
+            "apps/kaban-e2e/src/assets"
+          ],
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        },
+        "configurations": {
+          "development": {},
+          "production": {
+            "esbuildOptions": {
+              "sourcemap": false,
+              "outExtension": {
+                ".js": ".js"
+              }
+            }
+          }
+        }
+      },
+      "serve": {
+        "continuous": true,
+        "executor": "@nx/js:node",
+        "defaultConfiguration": "development",
+        "dependsOn": [
+          "build"
+        ],
+        "options": {
+          "buildTarget": "@oleksii-donoha/kaban-e2e:build",
+          "runBuildTargetDependencies": false
+        },
+        "configurations": {
+          "development": {
+            "buildTarget": "@oleksii-donoha/kaban-e2e:build:development"
+          },
+          "production": {
+            "buildTarget": "@oleksii-donoha/kaban-e2e:build:production"
+          }
+        }
+      }
+    }
+  }
+}

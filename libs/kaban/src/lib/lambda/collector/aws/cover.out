@@ -1,0 +1,22 @@
+mode: set
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:20.121,24.16 2 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:24.16,27.3 2 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:28.2,28.17 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:31.92,33.16 2 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:33.16,35.3 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:36.2,36.32 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:36.32,40.3 3 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:41.2,41.42 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:44.92,46.16 2 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:46.16,48.3 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:49.2,49.35 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:49.35,53.3 3 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:54.2,54.33 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:57.107,59.16 2 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:59.16,62.3 2 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:63.2,63.17 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:66.85,68.16 2 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:68.16,70.3 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:71.2,71.34 1 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:71.34,75.3 3 1
+github.com/oleksii-donoha/oleksii-donoha/kaban/collector/m/v2/aws/util.go:76.2,76.44 1 1

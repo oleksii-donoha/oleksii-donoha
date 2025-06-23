@@ -8,6 +8,12 @@
     },
     {
       "path": "./apps/rds-port-forward-e2e-tester"
+    },
+    {
+      "path": "./libs/kaban"
+    },
+    {
+      "path": "./apps/kaban-e2e"
     }
   ]
 }
