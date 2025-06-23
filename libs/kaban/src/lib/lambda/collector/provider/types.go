@@ -9,6 +9,10 @@ type ListRepositoriesOpts struct {
 	FilterName string
 }
 
+type ListRepositoriesResult struct {
+	Repos []any `json:"repos"`
+}
+
 type Provider interface {
 	ListRepositories(ctx context.Context, opts *ListRepositoriesOpts) ([]any, error)
 }

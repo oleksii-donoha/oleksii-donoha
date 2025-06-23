@@ -72,14 +72,12 @@ func New(ctx context.Context, mode string, appID, installationID int64, keyConte
 		return client.Repositories.ListByUser(ctx, userOrOrg, userOpts)
 	}
 	var listFunc repoListFunc
-	var listOpts any
+	var listOpts any = &github.RepositoryListByOrgOptions{} 
 	switch mode {
 	case ModeOrg:
 		listFunc = listByOrg
-		listOpts = &github.RepositoryListByOrgOptions{} // Set options as needed
 	case ModeUser:
 		listFunc = listByUser
-		listOpts = &github.RepositoryListByUserOptions{} // Set options as needed
 	default:
 		msg := fmt.Sprintf("Unknown provider mode %s, possible values: %v", mode, []string{ModeOrg, ModeUser})
 		slog.Error(msg)
