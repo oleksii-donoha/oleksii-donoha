@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "sst": "3.13.19"
+    "sst": "^3.9.28"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.149"

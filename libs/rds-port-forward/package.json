@@ -30,7 +30,7 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "development": "./src/main.ts",
+      "@oleksii-donoha/source": "./src/main.ts",
       "types": "./dist/main.d.ts",
       "import": "./dist/main.js",
       "default": "./dist/main.js"
