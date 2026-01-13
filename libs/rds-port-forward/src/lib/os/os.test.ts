@@ -193,6 +193,32 @@ describe('OsManager', () => {
       await promise;
     });
 
+    it('should handle signals when child process has no pid', async () => {
+      const mockChildProcess = {
+        pid: undefined,
+        on: vi.fn((event, callback) => {
+          if (event === 'exit') {
+            callback(0, null);
+          }
+        }),
+      } as unknown as ChildProcess;
+      mockSpawn.mockReturnValue(mockChildProcess);
+
+      const target = 'fake-target';
+      const params = '{"portNumber":["3306"],"localPortNumber":["3306"]}';
+
+      const mockProcess = new EventEmitter() as unknown as typeof process;
+      mockProcess.kill = vi.fn(() => true) as unknown as typeof process.kill;
+
+      const promise = osManager.runSession(target, params, mockProcess);
+
+      mockProcess.emit('SIGINT');
+      expect(mockLogger.debug).toHaveBeenCalledWith('Handling SIGINT');
+      expect(mockProcess.kill).not.toHaveBeenCalled();
+
+      await promise;
+    });
+
     it('should log and resolve with the exit code when the process exits', async () => {
       const mockChildProcess = {
         on: vi.fn((event, callback) => {
