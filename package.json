@@ -37,8 +37,8 @@
     "tslib": "^2.3.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.3",
-    "verdaccio": "^6.0.5",
-    "vite": "7.1.9",
+    "verdaccio": "^6.2.5",
+    "vite": "7.3.1",
     "vitest": "4.0.9"
   },
   "workspaces": [
@@ -46,7 +46,7 @@
     "apps/*"
   ],
   "dependencies": {
-    "@aws-sdk/client-ecs": "^3.799.0",
+    "@aws-sdk/client-ecs": "^3.995.0",
     "@inquirer/prompts": "^7.5.0",
     "fuse.js": "^7.1.0",
     "winston": "^3.17.0",
