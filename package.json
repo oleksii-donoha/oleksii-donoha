@@ -1,67 +1,57 @@
 {
-  "name": "@oleksii-donoha/source",
-  "version": "0.0.0",
+  "name": "@oleksii-donoha/rds-port-forward",
+  "version": "1.0.4",
+  "description": "A streamlined way to forward AWS RDS ports locally for ECS-based applications",
+  "type": "module",
   "license": "MIT",
-  "scripts": {
-    "prepare": "husky || true",
-    "upgrade": "npx nx migrate latest && npm i && npx nx migrate --run-migrations"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oleksii-donoha/oleksii-donoha"
   },
-  "private": true,
+  "keywords": ["aws", "rds", "ecs", "port forwarding"],
+  "engines": { "node": ">=22" },
+  "os": ["darwin", "linux"],
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "bin": { "rds-port-forward": "./dist/main.js" },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/main.d.ts",
+      "import": "./dist/main.js",
+      "default": "./dist/main.js"
+    }
+  },
+  "files": ["dist", "!**/*.tsbuildinfo"],
+  "publishConfig": { "access": "public", "provenance": true },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky || true"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ecs": "^3.799.0",
+    "@inquirer/prompts": "^7.5.0",
+    "fuse.js": "^7.1.0",
+    "tslib": "^2.3.0",
+    "winston": "^3.17.0",
+    "yargs": "^17.7.2"
+  },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
-    "@nx/esbuild": "21.1.2",
-    "@nx/eslint": "21.1.2",
-    "@nx/eslint-plugin": "21.1.2",
-    "@nx/js": "21.1.2",
-    "@nx/node": "21.1.2",
-    "@nx/vite": "21.1.2",
-    "@nx/web": "21.1.2",
-    "@swc-node/register": "~1.9.1",
-    "@swc/core": "~1.5.7",
-    "@swc/helpers": "~0.5.11",
     "@types/node": "^22.15.0",
+    "@types/yargs": "^17.0.33",
     "@vitest/coverage-v8": "^3.1.2",
-    "@vitest/ui": "^3.0.0",
-    "esbuild": "^0.25.5",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-prettier": "^5.4.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "husky": "^9.1.7",
-    "jiti": "2.4.2",
-    "jsdom": "~22.1.0",
-    "jsonc-eslint-parser": "^2.1.0",
-    "nx": "21.1.2",
     "prettier": "^3.5.0",
-    "tslib": "^2.3.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.19.0",
-    "verdaccio": "^6.0.5",
-    "vite": "^6.3.4",
     "vitest": "^3.0.0"
-  },
-  "workspaces": [
-    "libs/rds-port-forward",
-    "apps/*"
-  ],
-  "dependencies": {
-    "@aws-sdk/client-ecs": "^3.799.0",
-    "@inquirer/prompts": "^7.5.0",
-    "fuse.js": "^7.1.0",
-    "winston": "^3.17.0",
-    "yargs": "^17.7.2"
-  },
-  "nx": {
-    "includedScripts": [],
-    "targets": {
-      "local-registry": {
-        "executor": "@nx/js:verdaccio",
-        "options": {
-          "port": 4873,
-          "config": ".verdaccio/config.yml",
-          "storage": "tmp/local-registry/storage"
-        }
-      }
-    }
   }
 }
