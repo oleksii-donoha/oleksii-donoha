@@ -57,6 +57,20 @@ describe('clientUtil', () => {
       });
     });
 
+    it('should handle ListTasksCommand with undefined taskArns', async () => {
+      mockSend.mockResolvedValueOnce({
+        taskArns: undefined,
+        nextToken: undefined,
+      });
+
+      const result = await paginateClientCommand(mockClient, {
+        desiredStatus: 'RUNNING',
+      });
+
+      expect(result).toEqual([]);
+      expect(mockSend).toHaveBeenCalledTimes(1);
+    });
+
     it('should paginate ListServicesCommand', async () => {
       mockSend.mockResolvedValueOnce({
         serviceArns: ['service1'],
@@ -75,6 +89,20 @@ describe('clientUtil', () => {
       });
     });
 
+    it('should handle ListServicesCommand with undefined serviceArns', async () => {
+      mockSend.mockResolvedValueOnce({
+        serviceArns: undefined,
+        nextToken: undefined,
+      });
+
+      const result = await paginateClientCommand(mockClient, {
+        cluster: 'cluster1',
+      });
+
+      expect(result).toEqual([]);
+      expect(mockSend).toHaveBeenCalledTimes(1);
+    });
+
     it('should paginate ListClustersCommand', async () => {
       mockSend.mockResolvedValueOnce({
         clusterArns: ['cluster1', 'cluster2'],
@@ -88,6 +116,18 @@ describe('clientUtil', () => {
       expect(ListClustersCommand).toHaveBeenCalledWith({
         nextToken: undefined,
       });
+    });
+
+    it('should handle ListClustersCommand with undefined clusterArns', async () => {
+      mockSend.mockResolvedValueOnce({
+        clusterArns: undefined,
+        nextToken: undefined,
+      });
+
+      const result = await paginateClientCommand(mockClient, {});
+
+      expect(result).toEqual([]);
+      expect(mockSend).toHaveBeenCalledTimes(1);
     });
 
     it('should throw an error for unknown input type', async () => {

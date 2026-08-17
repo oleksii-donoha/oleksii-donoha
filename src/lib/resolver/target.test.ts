@@ -279,6 +279,31 @@ describe('TargetResolver', () => {
 
       expect(targetResolver['taskId']).toBe('test-task-2');
     });
+
+    it('should handle tasks with undefined containers array', async () => {
+      targetResolver['clusterName'] = 'test-cluster';
+      vi.mocked(paginate)
+        .mockResolvedValueOnce([
+          'arn:aws:ecs:region:123456789012:task/test-task-1',
+        ])
+        .mockResolvedValueOnce([
+          {
+            taskArn: 'arn:aws:ecs:region:123456789012:task/test-task-1',
+            tags: [{ key: 'Name', value: 'Task 1' }],
+            taskDefinitionArn:
+              'arn:aws:ecs:region:123456789012:task-def/task-def-1',
+            containers: undefined,
+          },
+        ]);
+      vi.mocked(select).mockResolvedValueOnce({
+        taskId: 'test-task-1',
+        taskDefinition: 'foo',
+      });
+
+      await targetResolver.resolveTask();
+
+      expect(targetResolver['taskId']).toBe('test-task-1');
+    });
   });
 
   describe('resolveContainer', () => {
