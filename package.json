@@ -37,7 +37,7 @@
     "fuse.js": "^7.1.0",
     "tslib": "^2.3.0",
     "winston": "^3.17.0",
-    "yargs": "^17.7.2"
+    "yargs": "^18.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",
