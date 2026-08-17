@@ -131,8 +131,14 @@ Make sure the task role of your target task includes the following permissions:
 
 ## Development
 
-Run `nx run @oleksii-donoha/rds-port-forward:cli` to build and run the CLI. Provide CLI arguments by adding `--args=--<arg> ...`.
+Install dependencies with `npm install`.
 
-Run `nx build rds-port-forward` to only build the library.
+Run `npm test` to run the unit tests.
 
-Run `npx nx test rds-port-forward` to run the unit tests.
+Run `npm run build` to build the CLI.
+
+Run `npm run lint` to lint the code.
+
+Releases are cut by [release-please](https://github.com/googleapis/release-please): merging its release PR publishes the package to npm with provenance.
+
+The `e2e/` folder is a standalone manual SST harness with its own `package.json`, kept outside the root install.
