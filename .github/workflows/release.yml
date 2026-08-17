@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  # Manual escape hatch: republish the version currently on main, for when a
+  # release was tagged but its publish step failed.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,7 +26,9 @@ jobs:
 
   publish:
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    if: >-
+      needs.release-please.outputs.release_created == 'true' ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -41,6 +46,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      # Authenticates via OIDC trusted publishing (no token); the id-token
+      # permission above is what npm exchanges for short-lived credentials,
+      # and it is also what signs the provenance attestation.
       - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
