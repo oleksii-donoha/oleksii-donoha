@@ -115,11 +115,34 @@ describe('OsManager', () => {
           '--target',
           target,
           '--parameters',
-          `'${params}'`,
+          params,
           '--document-name',
           'AWS-StartPortForwardingSessionToRemoteHost',
         ],
-        { stdio: 'inherit', shell: true },
+        { stdio: 'inherit' },
+      );
+    });
+
+    it('should not spawn through a shell, so metacharacters stay literal', async () => {
+      const mockChildProcess = {
+        on: vi.fn((event, callback) => {
+          if (event === 'exit') {
+            callback(0, null);
+          }
+        }),
+      } as unknown as ChildProcess;
+      mockSpawn.mockReturnValue(mockChildProcess);
+
+      const target = 'fake-target; touch /tmp/pwned';
+      const params = '{"portNumber":["3306"]}';
+      mediator.rawArgs = { profile: '$(id)', region: '`whoami`' };
+      osManager = new OsManager(mockLogger, mediator);
+      await osManager.runSession(target, params, mockProcess);
+
+      const [, args, options] = mockSpawn.mock.calls[0];
+      expect(options).not.toHaveProperty('shell');
+      expect(args).toEqual(
+        expect.arrayContaining([target, params, '$(id)', '`whoami`']),
       );
     });
 
@@ -151,7 +174,7 @@ describe('OsManager', () => {
           '--target',
           target,
           '--parameters',
-          `'${params}'`,
+          params,
           '--document-name',
           'AWS-StartPortForwardingSessionToRemoteHost',
           '--profile',
@@ -159,7 +182,7 @@ describe('OsManager', () => {
           '--region',
           'fake-region',
         ],
-        { stdio: 'inherit', shell: true },
+        { stdio: 'inherit' },
       );
     });
 
