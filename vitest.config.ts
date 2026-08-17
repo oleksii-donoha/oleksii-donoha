@@ -1,20 +1,16 @@
-/// <reference types='vitest' />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
-export default defineConfig(() => ({
-  root: __dirname,
-  cacheDir: '../../node_modules/.vite/libs/rds-port-forward',
-  plugins: [],
+export default defineConfig({
   test: {
     watch: false,
     globals: true,
     environment: 'node',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['src/**/*.{test,spec}.ts'],
     reporters: ['default'],
     coverage: {
       enabled: true,
       reportsDirectory: './test-output/vitest/coverage',
-      provider: 'v8' as const,
+      provider: 'v8',
       thresholds: {
         functions: 100,
         lines: -15,
@@ -23,4 +19,4 @@ export default defineConfig(() => ({
       include: ['src/lib/**/*'],
     },
   },
-}));
+});

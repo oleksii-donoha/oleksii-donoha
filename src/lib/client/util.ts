@@ -15,9 +15,7 @@ import { utilText } from './uiText.js';
 const DESCRIBE_TASKS_MAX_ARNS = 100;
 
 export type PaginatedCommandInput =
-  | ListClustersCommandInput
-  | ListTasksCommandInput
-  | ListServicesCommandInput;
+  ListClustersCommandInput | ListTasksCommandInput | ListServicesCommandInput;
 
 export type RawDescribeTasksInput = {
   taskArns: string[];
