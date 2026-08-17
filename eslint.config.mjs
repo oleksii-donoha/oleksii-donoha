@@ -5,7 +5,13 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'test-output', 'e2e', 'vitest.config.*.timestamp*'],
+    ignores: [
+      'dist',
+      'test-output',
+      'e2e',
+      '.remember',
+      'vitest.config.*.timestamp*',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
