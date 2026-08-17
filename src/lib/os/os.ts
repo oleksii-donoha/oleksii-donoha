@@ -55,7 +55,7 @@ export class OsManager {
       '--target',
       target,
       '--parameters',
-      `'${params}'`,
+      params,
       '--document-name',
       DOCUMENT_NAME,
     ];
@@ -65,12 +65,14 @@ export class OsManager {
       }
     }
 
-    this.logger.debug(`Running the command: ${COMMAND} ${args.join(' ')}`);
+    // The JSON parameters are quoted for display only, so the logged command
+    // can be pasted into a shell. The child below receives the raw argv.
+    const displayArgs = args.map((arg) => (arg === params ? `'${arg}'` : arg));
+    this.logger.debug(
+      `Running the command: ${COMMAND} ${displayArgs.join(' ')}`,
+    );
 
-    const childProcess = spawn(COMMAND, args, {
-      stdio: 'inherit',
-      shell: true,
-    });
+    const childProcess = spawn(COMMAND, args, { stdio: 'inherit' });
 
     const handleSignal = (signal: NodeJS.Signals) => {
       this.logger.debug(`Handling ${signal}`);
