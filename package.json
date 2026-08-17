@@ -8,12 +8,24 @@
     "type": "git",
     "url": "git+https://github.com/oleksii-donoha/oleksii-donoha"
   },
-  "keywords": ["aws", "rds", "ecs", "port forwarding"],
-  "engines": { "node": ">=22" },
-  "os": ["darwin", "linux"],
+  "keywords": [
+    "aws",
+    "rds",
+    "ecs",
+    "port forwarding"
+  ],
+  "engines": {
+    "node": "^22.13.0 || >=23.5.0"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
   "main": "./dist/main.js",
   "types": "./dist/main.d.ts",
-  "bin": { "rds-port-forward": "./dist/main.js" },
+  "bin": {
+    "rds-port-forward": "./dist/main.js"
+  },
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -22,8 +34,14 @@
       "default": "./dist/main.js"
     }
   },
-  "files": ["dist", "!**/*.tsbuildinfo"],
-  "publishConfig": { "access": "public", "provenance": true },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
@@ -33,25 +51,25 @@
   },
   "dependencies": {
     "@aws-sdk/client-ecs": "^3.799.0",
-    "@inquirer/prompts": "^7.5.0",
+    "@inquirer/prompts": "8.5.2",
     "fuse.js": "^7.1.0",
     "tslib": "^2.3.0",
     "winston": "^3.17.0",
-    "yargs": "^17.7.2"
+    "yargs": "18.1.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
-    "@types/node": "^22.15.0",
-    "@types/yargs": "^17.0.33",
-    "@vitest/coverage-v8": "4.0.9",
-    "eslint": "^9.8.0",
-    "eslint-config-prettier": "^10.0.0",
-    "eslint-plugin-prettier": "^5.4.0",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "@eslint/js": "10.0.1",
+    "@types/node": "^22.20.1",
+    "@types/yargs": "^17.0.35",
+    "@vitest/coverage-v8": "4.1.10",
+    "eslint": "10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-simple-import-sort": "14.0.0",
     "husky": "^9.1.7",
-    "prettier": "^3.5.0",
+    "prettier": "^3.9.6",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.46.3",
-    "vitest": "4.0.9"
+    "typescript-eslint": "8.67.0",
+    "vitest": "4.1.10"
   }
 }
