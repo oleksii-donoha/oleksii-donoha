@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-ecs": "^3.799.0",
-    "@inquirer/prompts": "8.5.2",
+    "@inquirer/prompts": "8.7.0",
     "fuse.js": "^7.1.0",
     "tslib": "^2.3.0",
     "winston": "^3.17.0",
