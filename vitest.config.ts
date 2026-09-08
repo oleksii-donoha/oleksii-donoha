@@ -16,7 +16,7 @@ export default defineConfig({
         lines: -15,
         branches: 99,
       },
-      include: ['src/lib/**/*'],
+      include: ['src/lib/**/*.ts'],
     },
   },
 });
