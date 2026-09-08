@@ -5,7 +5,6 @@
 
 ### Bug Fixes
 
-* **deps:** update runtime and dev dependencies ([0887277](https://github.com/oleksii-donoha/oleksii-donoha/commit/08872775dd478368f83432f1bb7d525a1966afd8))
 * **deps:** update runtime and dev dependencies ([7d29275](https://github.com/oleksii-donoha/oleksii-donoha/commit/7d292751ed6347322d2121d808f401d03d5f66b8))
 
 ## [2.0.0](https://github.com/oleksii-donoha/oleksii-donoha/compare/v1.0.6...v2.0.0) (2026-08-17)
